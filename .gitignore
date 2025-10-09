@@ -53,3 +53,79 @@ Thumbs.db
 # Misc
 *.bak
 *.tmp
+./anaconda_projects/
+
+# -----------------------------
+# Additional Data-Science ignores
+# -----------------------------
+# Dataset folders (local copies, exports, examples)
+/data/
+/datasets/
+/data_raw/
+/data_processed/
+/**/data/
+
+# Model artifacts and checkpoints
+/models/
+/model_weights/
+/checkpoints/
+/*.ckpt
+/*.pt
+/*.pth
+
+# TensorFlow and PyTorch temporary files
+/tf_model_dir/
+/tensorboard/
+/events.out.tfevents.*
+
+# MLflow and experiment tracking
+.mlflow/
+mlruns/
+
+# Saved environments and package managers
+environment.yml
+requirements.txt
+Pipfile
+Pipfile.lock
+venv/
+
+# Secret and credential files
+.env.local
+.env.*
+secrets.json
+credentials.json
+credentials/
+
+# Build and distribution
+dist/
+build/
+*.egg-info/
+
+# Lock files and caches
+*.lock
+__pypackages__/
+
+# Notebook checkpoints and outputs (keep source, ignore outputs)
+*.nbconvert.ipynb
+output/*
+
+# Logs, reports, and temporary analysis outputs
+reports/
+logs/
+**/logs/
+
+# Large binaries and intermediate files
+*.h5
+*.bin
+*.model
+*.onnx
+
+# Archive files
+*.zip
+*.tar.gz
+*.7z
+
+# Ignore html dump folders used for scraping practice
+htmls/
+
+# End of additional ignores
