@@ -1,0 +1,96 @@
+# Introduction to Databases
+
+## What is a Database?
+
+A database is a collection of organized information stored in a computer. Think of it like a digital filing cabinet where you can easily store, find, and manage data.
+
+Examples:
+- Your phone's contact list
+- A library catalog
+- Online shopping websites
+- Social media platforms
+
+## Basic Database Terms
+
+**Table**: Like a spreadsheet with rows and columns
+**Row**: One complete record (like one person's information)
+**Column**: One type of data (like names or ages)
+**Primary Key**: A unique identifier for each row
+**Database**: A collection of related tables
+
+## Types of Databases
+
+**Relational Databases (SQL)**
+- Use tables connected to each other
+- Examples: MySQL, PostgreSQL, SQLite
+- Good for: Most business applications
+
+**NoSQL Databases**
+- More flexible structure
+- Examples: MongoDB, Firebase
+- Good for: Apps with changing data needs
+
+## SQL Basics
+
+SQL (Structured Query Language) is used to work with databases.
+
+Basic commands:
+```sql
+SELECT name, age FROM students;           -- Show data
+INSERT INTO students VALUES ('John', 20); -- Add data
+UPDATE students SET age = 21 WHERE name = 'John'; -- Change data
+DELETE FROM students WHERE age > 30;      -- Remove data
+```
+
+## Database Design
+
+1. Plan what information you need to store
+2. Organize data into separate tables
+3. Connect related tables together
+4. Avoid storing the same information twice
+
+Example - Library System:
+- Books table: BookID, Title, Author
+- Members table: MemberID, Name, Email
+- Borrowing table: BookID, MemberID, Date
+
+## Databases in Data Science
+
+Data scientists use databases to:
+- Store large datasets
+- Clean and organize data
+- Combine data from different sources
+- Calculate statistics quickly
+
+Common operations:
+```sql
+SELECT * FROM sales WHERE date >= '2024-01-01';
+SELECT category, COUNT(*) FROM products GROUP BY category;
+SELECT AVG(price) FROM products;
+```
+
+## Getting Started
+
+1. Choose a database (SQLite for beginners)
+2. Learn basic SQL commands
+3. Practice with sample data
+4. Connect to programming languages like Python
+
+## Popular Database Systems
+
+- **SQLite**: Simple, good for learning
+- **MySQL**: Free, widely used for websites
+- **PostgreSQL**: Powerful, good for complex data
+- **MongoDB**: NoSQL, flexible structure
+
+## Best Practices
+
+- Always backup your data
+- Use descriptive names for tables and columns
+- Keep data organized in separate tables
+- Test your queries before running them
+- Start simple and add complexity gradually
+
+## Summary
+
+Databases help organize and manage information efficiently. They are essential for websites, apps, and data analysis. Learning SQL and database design will make working with data much easier.
