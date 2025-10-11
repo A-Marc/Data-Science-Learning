@@ -1,0 +1,227 @@
+=========================================
+2. DATABASE CREATION & MANAGEMENT
+=========================================
+
+-----------------------------------------
+2.1 CREATE DATABASE
+-----------------------------------------
+
+👉 PURPOSE:
+The CREATE DATABASE statement is used to create a new database in MySQL.
+
+👉 SYNTAX:
+CREATE DATABASE database_name;
+
+👉 EXAMPLE:
+CREATE DATABASE college;
+
+👉 OUTPUT:
+Query OK, 1 row affected (0.01 sec)
+
+✅ NOTE:
+- Database names should be unique.
+- You can also use `IF NOT EXISTS` to avoid an error if the database already exists.
+
+👉 EXAMPLE (With IF NOT EXISTS):
+CREATE DATABASE IF NOT EXISTS college;
+
+👉 OUTPUT:
+Query OK, 1 row affected (0.00 sec)
+OR
+Query OK, 0 rows affected (0.00 sec)  → if it already exists
+
+
+-----------------------------------------
+2.2 SHOW DATABASES
+-----------------------------------------
+
+👉 PURPOSE:
+This command lists all the databases present in your MySQL server.
+
+👉 SYNTAX:
+SHOW DATABASES;
+
+👉 EXAMPLE:
+SHOW DATABASES;
+
+👉 OUTPUT (Example):
++--------------------+
+| Database           |
++--------------------+
+| college            |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+✅ NOTE:
+- The system databases like `information_schema`, `mysql`, `performance_schema`, and `sys` are created automatically by MySQL.
+- Your created database (e.g., `college`) will appear in this list.
+
+
+-----------------------------------------
+2.3 USE DATABASE
+-----------------------------------------
+
+👉 PURPOSE:
+This command selects a specific database to work with.
+Once selected, all queries will be executed in that database unless you change it.
+
+👉 SYNTAX:
+USE database_name;
+
+👉 EXAMPLE:
+USE college;
+
+👉 OUTPUT:
+Database changed
+
+✅ NOTE:
+- After using this command, all operations (like creating tables, inserting data, etc.) will apply to the selected database.
+- You can verify the selected database by:
+  SELECT DATABASE();
+
+👉 EXAMPLE:
+SELECT DATABASE();
+
+👉 OUTPUT:
++------------+
+| DATABASE() |
++------------+
+| college    |
++------------+
+1 row in set (0.00 sec)
+
+
+=========================================
+💡 QUICK SUMMARY
+=========================================
+1️⃣ CREATE DATABASE college;
+2️⃣ SHOW DATABASES;
+3️⃣ USE college;
+4️⃣ SELECT DATABASE();
+
+These commands help you create, list, and select your working database.
+
+=========================================
+3. TABLE CREATION & OPERATIONS
+=========================================
+
+-----------------------------------------
+3.1 CREATE TABLE
+-----------------------------------------
+
+👉 PURPOSE:
+The CREATE TABLE statement is used to create a new table inside a selected database.
+
+👉 SYNTAX:
+CREATE TABLE table_name (
+   column1 datatype constraints,
+   column2 datatype constraints,
+   column3 datatype constraints,
+   ...
+);
+
+✅ COMMON DATA TYPES:
+INT           → for numbers
+VARCHAR(n)    → for text (max length n)
+CHAR(n)       → fixed-length text
+DATE          → for date values
+FLOAT / DOUBLE → for decimal numbers
+BOOLEAN / TINYINT(1) → for true/false values
+
+✅ COMMON CONSTRAINTS:
+NOT NULL, UNIQUE, PRIMARY KEY, AUTO_INCREMENT, DEFAULT
+
+👉 EXAMPLE:
+CREATE TABLE students (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   name VARCHAR(50) NOT NULL,
+   age INT,
+   course VARCHAR(50),
+   admission_date DATE
+);
+
+👉 OUTPUT:
+Query OK, 0 rows affected (0.02 sec)
+
+✅ NOTE:
+- The `AUTO_INCREMENT` automatically increases the value of `id` for each new record.
+- The `PRIMARY KEY` uniquely identifies each row in the table.
+- Always make sure you have selected the correct database using `USE database_name;` before creating a table.
+
+👉 CHECK YOUR CURRENT DATABASE:
+SELECT DATABASE();
+
+-----------------------------------------
+3.2 SHOW TABLES
+-----------------------------------------
+
+👉 PURPOSE:
+Displays all tables present in the currently selected database.
+
+👉 SYNTAX:
+SHOW TABLES;
+
+👉 EXAMPLE:
+SHOW TABLES;
+
+👉 OUTPUT (Example):
++------------------+
+| Tables_in_college |
++------------------+
+| students          |
+| teachers          |
+| courses           |
++------------------+
+3 rows in set (0.00 sec)
+
+✅ NOTE:
+- If you don’t see your table here, make sure you are in the right database.
+- Use `USE database_name;` to switch.
+
+-----------------------------------------
+3.3 DESCRIBE TABLE
+-----------------------------------------
+
+👉 PURPOSE:
+The DESCRIBE (or DESC) command is used to display the structure of a table — its columns, data types, and constraints.
+
+👉 SYNTAX:
+DESCRIBE table_name;
+OR
+DESC table_name;
+
+👉 EXAMPLE:
+DESCRIBE students;
+
+👉 OUTPUT (Example):
++-----------------+-------------+------+-----+---------+----------------+
+| Field           | Type        | Null | Key | Default | Extra          |
++-----------------+-------------+------+-----+---------+----------------+
+| id              | int         | NO   | PRI | NULL    | auto_increment |
+| name            | varchar(50) | NO   |     | NULL    |                |
+| age             | int         | YES  |     | NULL    |                |
+| course          | varchar(50) | YES  |     | NULL    |                |
+| admission_date  | date        | YES  |     | NULL    |                |
++-----------------+-------------+------+-----+---------+----------------+
+5 rows in set (0.00 sec)
+
+✅ NOTE:
+- “Key = PRI” means the column is a Primary Key.
+- “Extra = auto_increment” means the column value auto-increments.
+- “Null = NO” means the column cannot have NULL values.
+
+-----------------------------------------
+💡 QUICK SUMMARY
+-----------------------------------------
+1️⃣ CREATE TABLE → creates a new table.
+2️⃣ SHOW TABLES → lists all tables in the database.
+3️⃣ DESCRIBE TABLE → shows structure of a table.
+
+-----------------------------------------
+🧠 TIP:
+You can create multiple tables in the same database — just make sure each has a unique name.
+-----------------------------------------
