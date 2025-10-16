@@ -1,0 +1,22 @@
+-- Create a sample table
+CREATE TABLE students (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    age INT
+);
+
+-- Insert data into the table
+INSERT INTO students (id, name, age)
+VALUES (1, 'Alice', 22),
+       (2, 'Bob', 24),
+       (3, 'Charlie', 23);
+
+-- View the inserted data
+SELECT * FROM students;
+
+-- Output:
+-- id |  name   | age
+-- --------------------
+--  1 | Alice   | 22
+--  2 | Bob     | 24
+--  3 | Charlie | 23
