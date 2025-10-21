@@ -1,0 +1,204 @@
+Transactions in MySQL
+=====================
+
+This note explains transactions in MySQL with examples and expected outputs you can run in the MySQL CLI or a GUI client. It covers the ACID properties, basic transaction commands (START/BEGIN, COMMIT, ROLLBACK), SAVEPOINTs, isolation levels, autocommit behavior, and practical examples using InnoDB.
+
+1) What is a transaction?
+-------------------------
+- A transaction is a sequence of one or more SQL statements treated as a single logical unit of work.
+- Either all statements in the transaction succeed (COMMIT) or none of them take effect (ROLLBACK).
+- Transactions provide atomicity, consistency, isolation, and durability (ACID).
+
+2) ACID properties
+-------------------
+- Atomicity: All changes in a transaction are applied fully or not at all.
+- Consistency: A transaction moves the database from one valid state to another, preserving data integrity rules.
+- Isolation: Concurrent transactions do not interfere with each other; effects become visible according to the isolation level.
+- Durability: Once a transaction is committed, changes persist even after a crash (assuming proper storage).
+
+3) Storage engine requirement
+-----------------------------
+- Transactions are supported only by transactional storage engines (InnoDB is the default transactional engine in MySQL).
+- Non-transactional engines (for example MyISAM) do not support COMMIT/ROLLBACK.
+	To check the engine for a table:
+
+	SELECT TABLE_NAME, ENGINE
+	FROM information_schema.TABLES
+	WHERE TABLE_SCHEMA = DATABASE()
+		AND TABLE_NAME = 'accounts';
+
+4) Basic transaction commands
+-----------------------------
+- START TRANSACTION;  -- or BEGIN;
+- COMMIT;             -- make all changes permanent
+- ROLLBACK;           -- undo all changes in the current transaction
+- SAVEPOINT name;     -- set a savepoint inside a transaction
+- ROLLBACK TO SAVEPOINT name; -- undo to the savepoint
+- RELEASE SAVEPOINT name; -- remove the savepoint
+
+Autocommit
+- MySQL default behavior is autocommit=1 (every statement is committed immediately).
+- Use START TRANSACTION (or set autocommit=0) to group multiple statements into one transaction.
+
+5) Example: Basic transfer (COMMIT)
+-----------------------------------
+-- 1. Create a small accounts table (InnoDB) and insert sample data
+CREATE TABLE IF NOT EXISTS accounts (
+	id INT PRIMARY KEY,
+	name VARCHAR(50),
+	balance DECIMAL(10,2)
+) ENGINE=InnoDB;
+
+TRUNCATE TABLE accounts; -- remove previous data (for repeatability)
+
+INSERT INTO accounts (id, name, balance) VALUES
+(1, 'Alice', 1000.00),
+(2, 'Bob',   500.00);
+
+-- 2. Start a transaction and perform a transfer of 200 from Alice to Bob
+START TRANSACTION;
+UPDATE accounts SET balance = balance - 200.00 WHERE id = 1; -- Alice
+UPDATE accounts SET balance = balance + 200.00 WHERE id = 2; -- Bob
+SELECT id, name, balance FROM accounts ORDER BY id;
+
+-- Expected output for the SELECT inside the transaction (before COMMIT):
+-- +----+-------+---------+
+-- | id | name  | balance |
+-- +----+-------+---------+
+-- |  1 | Alice |  800.00 |
+-- |  2 | Bob   |  700.00 |
+-- +----+-------+---------+
+
+COMMIT;
+
+-- After COMMIT the changes are persistent
+SELECT id, name, balance FROM accounts ORDER BY id;
+
+-- Expected output after COMMIT (same as above):
+-- +----+-------+---------+
+-- | id | name  | balance |
+-- +----+-------+---------+
+-- |  1 | Alice |  800.00 |
+-- |  2 | Bob   |  700.00 |
+-- +----+-------+---------+
+
+6) Example: ROLLBACK
+---------------------
+-- Start a transaction and make a change, then rollback
+START TRANSACTION;
+UPDATE accounts SET balance = balance - 300.00 WHERE id = 1; -- attempt to take 300 from Alice
+SELECT id, name, balance FROM accounts ORDER BY id;
+
+-- Expected (inside transaction):
+-- |  1 | Alice |  500.00 |
+-- |  2 | Bob   |  700.00 |
+
+ROLLBACK; -- undo the change
+
+SELECT id, name, balance FROM accounts ORDER BY id;
+
+-- Expected after ROLLBACK (values revert to pre-transaction):
+-- |  1 | Alice |  800.00 |
+-- |  2 | Bob   |  700.00 |
+
+7) Example: SAVEPOINT and partial rollback
+------------------------------------------
+-- Demonstrate SAVEPOINT
+START TRANSACTION;
+UPDATE accounts SET balance = balance - 100.00 WHERE id = 1; -- Alice: 800 -> 700
+SAVEPOINT sp1;
+UPDATE accounts SET balance = balance - 50.00 WHERE id = 1;  -- Alice: 700 -> 650
+SELECT id, name, balance FROM accounts ORDER BY id;
+
+-- Expected before ROLLBACK TO SAVEPOINT:
+-- |  1 | Alice |  650.00 |
+-- |  2 | Bob   |  700.00 |
+
+ROLLBACK TO SAVEPOINT sp1; -- undo only the last update (50)
+SELECT id, name, balance FROM accounts ORDER BY id;
+
+-- Expected after ROLLBACK TO SAVEPOINT (only first decrease remains):
+-- |  1 | Alice |  700.00 |
+-- |  2 | Bob   |  700.00 |
+
+COMMIT; -- make the remaining change permanent
+
+8) Isolation levels (conceptual + commands)
+-----------------------------------------
+- MySQL supports these standard isolation levels:
+	1. READ UNCOMMITTED
+	2. READ COMMITTED
+	3. REPEATABLE READ  (MySQL default)
+	4. SERIALIZABLE
+
+- Isolation level effects (high-level):
+	- Dirty read: reading uncommitted changes made by another transaction (only possible at READ UNCOMMITTED).
+	- Non-repeatable read: a row read twice within a transaction returns different values if another transaction updated and committed in between.
+	- Phantom read: new rows appear in a repeated query range because another transaction inserted them and committed.
+
+- Show and set isolation level (session):
+	-- show current session isolation
+	SELECT @@tx_isolation, @@transaction_isolation; -- older/newer variable names
+
+	-- set for current session only
+	SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+	-- or set at transaction start
+	SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+Notes:
+- MySQL's default REPEATABLE READ (InnoDB) guards against some anomalies and uses MVCC (multi-version concurrency control).
+- To observe isolation behavior, run two client sessions and perform transactions concurrently (this is best done interactively).
+
+9) Autocommit and START TRANSACTION differences
+----------------------------------------------
+- By default autocommit = 1: every statement is its own transaction and is committed automatically.
+- START TRANSACTION or BEGIN disables autocommit for the duration of the transaction until COMMIT/ROLLBACK.
+
+Example commands to check/set autocommit:
+SHOW VARIABLES LIKE 'autocommit';
+SET autocommit = 0; -- turn off autocommit (use with caution)
+-- Make your changes, then COMMIT; finally SET autocommit = 1; to restore default behavior
+
+10) Practical tips and gotchas
+-----------------------------
+- Always use a transactional engine (InnoDB) when you need ACID behavior.
+- Do not leave transactions open for long periods: they hold locks and can cause contention and long-running undo logs.
+- Use appropriate isolation level for the workload: higher isolation reduces concurrency.
+- If using connection pools, be careful to reset autocommit and isolation level on returned connections.
+
+11) How to run these examples (Windows PowerShell)
+-------------------------------------------------
+1) Open MySQL client interactively (paste commands):
+
+```powershell
+mysql -u root -p
+# (enter password when prompted)
+```
+
+2) Or save example SQL to a file (transactions_example.sql) and run:
+
+```powershell
+mysql -u root -p < transactions_example.sql
+```
+
+3) If you prefer to run a single command non-interactively (useful for small snippets):
+
+```powershell
+mysql -u root -p -e "SELECT id, name, balance FROM accounts ORDER BY id;"
+```
+
+12) Quick verification checklist
+-------------------------------
+- Ensure your table uses InnoDB: SHOW TABLE STATUS LIKE 'accounts';
+- Check autocommit: SELECT @@autocommit;
+- Practice the examples in two separate sessions (terminals) to see isolation behaviors.
+
+13) Summary
+-----------
+- Transactions allow safe multi-step updates to the database. Use START TRANSACTION, COMMIT to make changes permanent, and ROLLBACK to abort.
+- Use SAVEPOINT to create intermediate rollback points.
+- Understand isolation levels and autocommit to avoid surprises in concurrent environments.
+
+End of note.
+
