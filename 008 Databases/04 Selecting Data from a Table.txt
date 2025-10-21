@@ -1,0 +1,262 @@
+Selecting Data from a Table
+===========================
+
+This note covers the SQL SELECT statement used to retrieve data from database tables. It includes syntax, common clauses, examples, and expected outputs. Examples use a sample table called `employees` and a second table `departments` to demonstrate joins and aggregation.
+
+Sample tables
+-------------
+
+1) employees
+
+Columns:
+- id (INTEGER) — unique employee id
+- first_name (TEXT)
+- last_name (TEXT)
+- department_id (INTEGER) — foreign key to departments.id
+- salary (INTEGER)
+
+Sample rows:
+ id | first_name | last_name | department_id | salary
+----+------------+-----------+---------------+--------
+ 1  | Alice      | Johnson   | 10            | 60000
+ 2  | Bob        | Smith     | 20            | 52000
+ 3  | Carol      | Lee       | 10            | 75000
+ 4  | David      | Kim       | 30            | 48000
+ 5  | Eva        | Brown     | NULL          | 50000
+
+2) departments
+
+Columns:
+- id (INTEGER)
+- name (TEXT)
+
+Sample rows:
+ id | name
+----+-------------
+ 10 | Engineering
+ 20 | Sales
+ 30 | HR
+
+
+Basic SELECT
+------------
+
+Retrieve all columns and rows:
+
+SQL:
+ SELECT * FROM employees;
+
+Output (rows):
+ id | first_name | last_name | department_id | salary
+----+------------+-----------+---------------+--------
+ 1  | Alice      | Johnson   | 10            | 60000
+ 2  | Bob        | Smith     | 20            | 52000
+ 3  | Carol      | Lee       | 10            | 75000
+ 4  | David      | Kim       | 30            | 48000
+ 5  | Eva        | Brown     | NULL          | 50000
+
+Select specific columns:
+
+SQL:
+ SELECT first_name, last_name, salary FROM employees;
+
+Output:
+ first_name | last_name | salary
+------------+-----------+--------
+ Alice      | Johnson   | 60000
+ Bob        | Smith     | 52000
+ Carol      | Lee       | 75000
+ David      | Kim       | 48000
+ Eva        | Brown     | 50000
+
+
+Filtering rows with WHERE
+-------------------------
+
+SQL:
+ SELECT * FROM employees WHERE salary > 55000;
+
+Output:
+ id | first_name | last_name | department_id | salary
+----+------------+-----------+---------------+--------
+ 1  | Alice      | Johnson   | 10            | 60000
+ 3  | Carol      | Lee       | 10            | 75000
+
+Use multiple conditions with AND / OR:
+
+SQL:
+ SELECT first_name, last_name FROM employees WHERE department_id = 10 AND salary > 65000;
+
+Output:
+ first_name | last_name
+------------+-----------
+ Carol      | Lee
+
+Handle NULLs using IS NULL / IS NOT NULL:
+
+SQL:
+ SELECT id, first_name FROM employees WHERE department_id IS NULL;
+
+Output:
+ id | first_name
+----+------------
+ 5  | Eva
+
+
+Sorting results with ORDER BY
+-----------------------------
+
+SQL:
+ SELECT first_name, salary FROM employees ORDER BY salary DESC;
+
+Output (highest to lowest salary):
+ first_name | salary
+------------+--------
+ Carol      | 75000
+ Alice      | 60000
+ Bob        | 52000
+ Eva        | 50000
+ David      | 48000
+
+Limit rows with LIMIT (or TOP in some dialects)
+------------------------------------------------
+
+SQL (SQLite/Postgres/MySQL):
+ SELECT * FROM employees ORDER BY id LIMIT 3;
+
+Output:
+ id | first_name | last_name | department_id | salary
+----+------------+-----------+---------------+--------
+ 1  | Alice      | Johnson   | 10            | 60000
+ 2  | Bob        | Smith     | 20            | 52000
+ 3  | Carol      | Lee       | 10            | 75000
+
+In SQL Server use TOP:
+ SELECT TOP 3 * FROM employees ORDER BY id;
+
+
+Using DISTINCT
+---------------
+
+Return unique values for a column:
+
+SQL:
+ SELECT DISTINCT department_id FROM employees;
+
+Output:
+ department_id
+---------------
+ 10
+ 20
+ 30
+ NULL
+
+
+Aggregate functions and GROUP BY
+--------------------------------
+
+Get average, sum, min, max, count:
+
+SQL:
+ SELECT department_id, COUNT(*) AS num_employees, AVG(salary) AS avg_salary
+ FROM employees
+ GROUP BY department_id;
+
+Output (note: NULL department_id is grouped separately by some DBs):
+ department_id | num_employees | avg_salary
+---------------+---------------+-----------
+ 10            | 2             | 67500
+ 20            | 1             | 52000
+ 30            | 1             | 48000
+ NULL          | 1             | 50000
+
+Use HAVING to filter groups:
+
+SQL:
+ SELECT department_id, COUNT(*) AS num_employees FROM employees GROUP BY department_id HAVING COUNT(*) > 1;
+
+Output:
+ department_id | num_employees
+---------------+---------------
+ 10            | 2
+
+
+Joining tables
+--------------
+
+Inner join (rows that match in both tables):
+
+SQL:
+ SELECT e.first_name, e.last_name, d.name AS department
+ FROM employees e
+ JOIN departments d ON e.department_id = d.id;
+
+Output:
+ first_name | last_name | department
+------------+-----------+-------------
+ Alice      | Johnson   | Engineering
+ Bob        | Smith     | Sales
+ Carol      | Lee       | Engineering
+ David      | Kim       | HR
+
+Left join (all employees, with NULL for missing department):
+
+SQL:
+ SELECT e.first_name, e.last_name, d.name AS department
+ FROM employees e
+ LEFT JOIN departments d ON e.department_id = d.id;
+
+Output:
+ first_name | last_name | department
+------------+-----------+-------------
+ Alice      | Johnson   | Engineering
+ Bob        | Smith     | Sales
+ Carol      | Lee       | Engineering
+ David      | Kim       | HR
+ Eva        | Brown     | NULL
+
+Right join and Full join (dialect-dependent) — examples omitted for brevity.
+
+
+Subqueries
+----------
+
+Use a subquery in WHERE or FROM. Example: employees who earn more than the average salary:
+
+SQL:
+ SELECT first_name, last_name, salary FROM employees
+ WHERE salary > (SELECT AVG(salary) FROM employees);
+
+Output (assuming average around 57000):
+ first_name | last_name | salary
+------------+-----------+--------
+ Carol      | Lee       | 75000
+ Alice      | Johnson   | 60000
+
+
+Selecting with LIMIT and OFFSET (pagination)
+-------------------------------------------
+
+SQL:
+ SELECT * FROM employees ORDER BY id LIMIT 2 OFFSET 2; -- returns rows 3 and 4 (0-based offset)
+
+Output:
+ id | first_name | last_name | department_id | salary
+----+------------+-----------+---------------+--------
+ 3  | Carol      | Lee       | 10            | 75000
+ 4  | David      | Kim       | 30            | 48000
+
+
+Practical tips and notes
+-------------------------
+- Always qualify column names when joining tables to avoid ambiguity (e.g., e.id, d.id).
+- Use indexes on columns used frequently in WHERE, JOIN and ORDER BY to improve performance.
+- Beware of SELECT * in production code — select only required columns.
+- Aggregate queries with GROUP BY can produce NULL groups depending on SQL dialect and data.
+- Dialect differences: LIMIT vs TOP, || vs CONCAT for string concatenation, different functions for date/time and string operations.
+
+Conclusion
+----------
+
+This document provided a concise reference for selecting data from tables using SQL, with examples and expected outputs using `employees` and `departments` sample tables. Use the examples as templates when writing queries for your own data.
+
