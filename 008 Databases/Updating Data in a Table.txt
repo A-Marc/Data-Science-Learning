@@ -1,0 +1,172 @@
+
+Updating Data in a Table
+========================
+
+This note explains how to update rows in a relational database table using SQL. It includes the basic syntax, several examples with "before" and "after" outputs, transaction usage, dialect differences (Postgres/MySQL/SQL Server), and safety tips.
+
+1) Basic UPDATE syntax
+
+	UPDATE <table_name>
+	SET column1 = expression1,
+			column2 = expression2,
+			...
+	WHERE <condition>;
+
+	- If you omit the WHERE clause, all rows in the table will be updated.
+	- The WHERE clause should usually reference a primary key or indexed column for performance and correctness.
+
+2) Example: single-row update (employees table)
+
+	Sample table: employees
+
+	Before:
+	id | name       | department | salary
+	----+------------+------------+--------
+	 1 | Alice      | Sales      | 50000
+	 2 | Bob        | HR         | 48000
+	 3 | Carol      | Sales      | 60000
+
+	SQL:
+	UPDATE employees
+	SET salary = 65000
+	WHERE id = 3;
+
+	Output/result:
+	- Query returns: "Query OK, 1 row affected" (MySQL) or "UPDATE 1" (Postgres)
+
+	After:
+	id | name       | department | salary
+	----+------------+------------+--------
+	 1 | Alice      | Sales      | 50000
+	 2 | Bob        | HR         | 48000
+	 3 | Carol      | Sales      | 65000
+
+3) Example: update multiple rows
+
+	SQL:
+	UPDATE employees
+	SET department = 'Marketing'
+	WHERE department = 'Sales';
+
+	Effect: all employees with department 'Sales' will be moved to 'Marketing'.
+
+	Output/result:
+	- Query returns: "Query OK, 2 rows affected" (if two rows matched).
+
+4) Example: update using arithmetic expressions
+
+	Give all employees in HR a 5% raise:
+	UPDATE employees
+	SET salary = salary * 1.05
+	WHERE department = 'HR';
+
+5) UPDATE with JOIN (MySQL syntax) — updating from another table
+
+	Suppose we have a table `customers` and `orders`, and want to mark orders of VIP customers:
+
+	MySQL:
+	UPDATE orders o
+	JOIN customers c ON o.customer_id = c.id
+	SET o.priority = 'high'
+	WHERE c.loyalty_status = 'gold';
+
+	PostgreSQL (uses FROM):
+	UPDATE orders o
+	SET priority = 'high'
+	FROM customers c
+	WHERE o.customer_id = c.id
+		AND c.loyalty_status = 'gold';
+
+6) RETURNING / affected rows
+
+	- PostgreSQL supports RETURNING to show updated rows immediately:
+		UPDATE employees
+		SET salary = salary + 1000
+		WHERE department = 'Marketing'
+		RETURNING id, name, salary;
+
+		This returns the rows changed (id, name, salary) as query output.
+
+	- MySQL does not support RETURNING in the same way (as of older versions). It reports the number of rows affected. Newer MySQL / MariaDB versions may have different features.
+
+7) Limiting updates (dialect differences)
+
+	- MySQL supports ORDER BY and LIMIT in UPDATE: UPDATE ... ORDER BY ... LIMIT 1;
+	- PostgreSQL does not support LIMIT directly in UPDATE; use a subquery or CTE with ctid/primary key selection.
+	- SQL Server uses TOP: UPDATE TOP (1) ...
+
+8) Transactions and safety (recommended workflow)
+
+	Always test your WHERE clause with a SELECT first. Example:
+		SELECT * FROM employees WHERE department = 'Sales';
+
+	Then run the UPDATE inside a transaction when supported (Postgres, MySQL InnoDB, SQL Server):
+		BEGIN; -- or START TRANSACTION;
+		UPDATE employees
+		SET department = 'Marketing'
+		WHERE department = 'Sales';
+		-- verify changes
+		SELECT * FROM employees WHERE department = 'Marketing';
+		ROLLBACK; -- or COMMIT;
+
+	Use ROLLBACK while testing to avoid accidental permanent changes.
+
+9) Example: using a CTE to update a limited number of rows (Postgres)
+
+	WITH moved AS (
+		SELECT id FROM employees WHERE department = 'Sales' ORDER BY id LIMIT 2
+	)
+	UPDATE employees
+	SET department = 'Marketing'
+	WHERE id IN (SELECT id FROM moved);
+
+10) Common mistakes and edge cases
+
+	- Missing WHERE clause: will update all rows.
+	- Non-deterministic updates when using ORDER BY without LIMIT and relying on row order.
+	- Updating columns used in the WHERE clause: the WHERE applies to the pre-update values in most DBs; but be careful when updating multiple columns.
+	- Data type mismatches: assigning a string to a numeric column will fail or be coerced.
+	- Permissions: user must have UPDATE privileges on the table.
+
+11) Practical tips
+
+	- Always back up production data before mass updates.
+	- Prefer targeting with primary key or unique index.
+	- Use EXPLAIN PLAN for big updates to see estimated cost.
+	- For very large tables, consider batching updates (e.g., WHERE id BETWEEN x AND y) to avoid long locks and large transactions.
+
+12) Example: full workflow (safe update)
+
+	-- 1. Verify target rows
+	SELECT id, name, department, salary
+	FROM employees
+	WHERE department = 'Sales';
+
+	-- 2. Start transaction
+	BEGIN;
+
+	-- 3. Run update
+	UPDATE employees
+	SET department = 'Marketing'
+	WHERE department = 'Sales';
+
+	-- 4. Verify
+	SELECT id, name, department FROM employees WHERE department = 'Marketing';
+
+	-- 5. If everything looks good:
+	COMMIT;
+	-- Otherwise to undo during testing:
+	-- ROLLBACK;
+
+Closing notes
+-------------
+
+Updating data in tables is a fundamental operation. The main rules are: identify the rows precisely, test the target with SELECT, run updates in transactions when possible, and prefer small, auditable changes. Use dialect-specific features (RETURNING, LIMIT/TOP) when helpful, and always keep backups for production systems.
+
+Further reading
+---------------
+- Your database's documentation: PostgreSQL UPDATE, MySQL UPDATE, Microsoft SQL Server UPDATE.
+- Best practices: transactions, backups, indexing for WHERE clauses.
+
+End of note.
+
