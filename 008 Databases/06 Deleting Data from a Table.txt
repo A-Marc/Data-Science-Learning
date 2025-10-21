@@ -1,0 +1,143 @@
+(Deleting Data from a Table)
+
+This note explains how to remove rows from a relational database table using SQL. It covers the basic
+DELETE statement, use of WHERE to restrict deletions, deleting all rows, deleting with joins or subqueries,
+transaction safety, and includes examples with expected output messages for MySQL and PostgreSQL.
+
+1) Basic DELETE syntax
+
+	DELETE FROM table_name
+	WHERE condition;
+
+	- This removes rows from `table_name` that match the WHERE condition.
+	- If the WHERE clause is omitted, ALL rows in the table will be removed (equivalent to TRUNCATE
+	  in effect, but DELETE still logs each row deletion and may be slower).
+
+2) Delete all rows (careful)
+
+	-- delete every row (transactionally reversible if not committed)
+	DELETE FROM employees;
+
+	-- faster, non-transactional in many databases, reclaims storage differently
+	TRUNCATE TABLE employees;
+
+	Note: TRUNCATE may require different privileges and cannot be rolled back in some DBMS unless
+	executed inside a transaction-supporting engine.
+
+3) Delete with condition
+
+	DELETE FROM employees
+	WHERE department = 'Sales' AND hire_date < '2020-01-01';
+
+	- Use an indexed column in the WHERE clause where possible to avoid full-table scans.
+
+4) Delete using a subquery
+
+	DELETE FROM employees
+	WHERE id IN (SELECT employee_id FROM terminated_employees);
+
+	- Many databases support this pattern. For large deletes, consider batching or using a temporary
+	  table to collect ids to delete.
+
+5) Delete with JOIN (MySQL / SQL Server style)
+
+	-- MySQL example: delete rows from A that match B
+	DELETE A
+	FROM orders A
+	JOIN customers B ON A.customer_id = B.id
+	WHERE B.status = 'inactive';
+
+	-- PostgreSQL uses a different syntax
+	DELETE FROM orders
+	USING customers
+	WHERE orders.customer_id = customers.id
+	  AND customers.status = 'inactive';
+
+6) Safe deletion strategies
+
+	- Always run a SELECT first with the same WHERE to confirm which rows will be removed.
+	  Example: SELECT COUNT(*) FROM employees WHERE department = 'Sales';
+	- Wrap DELETE in a transaction so you can ROLLBACK if the result isn't what you expected.
+	- For very large deletes, delete in batches (e.g., LIMIT + loop) to avoid long locks and log
+	  growth: DELETE FROM table WHERE ... LIMIT 10000;
+	- Consider creating a backup or copying rows to an archive table before deleting.
+
+7) Examples and expected outputs
+
+Assume a table `employees` with columns (id, name, department, hire_date).
+
+Example A — delete a single row by id
+
+SQL:
+	DELETE FROM employees WHERE id = 101;
+
+MySQL output (example):
+	Query OK, 1 row affected (0.01 sec)
+
+PostgreSQL output (example):
+	DELETE 1
+
+Example B — delete multiple rows
+
+SQL:
+	DELETE FROM employees WHERE department = 'Interns';
+
+MySQL output (example):
+	Query OK, 5 rows affected (0.02 sec)
+
+PostgreSQL output (example):
+	DELETE 5
+
+Example C — delete all rows (use with caution)
+
+SQL:
+	DELETE FROM employees;
+
+MySQL output (example):
+	Query OK, 27 rows affected (0.05 sec)
+
+PostgreSQL output (example):
+	DELETE 27
+
+Example D — delete with subquery
+
+SQL:
+	DELETE FROM employees
+	WHERE id IN (SELECT employee_id FROM terminated_employees WHERE reason = 'resigned');
+
+MySQL output (example):
+	Query OK, 3 rows affected (0.01 sec)
+
+PostgreSQL output (example):
+	DELETE 3
+
+Example E — preview rows before delete (recommended)
+
+SQL:
+	SELECT id, name, department FROM employees WHERE department = 'Sales' AND hire_date < '2020-01-01';
+
+Then, if results look correct:
+	DELETE FROM employees WHERE department = 'Sales' AND hire_date < '2020-01-01';
+
+8) Permissions and constraints
+
+	- You need DELETE privilege on the table to remove rows. Foreign key constraints may prevent
+	  deletion if child rows exist; use ON DELETE CASCADE to propagate deletes or remove children first.
+
+9) Quick checklist before running DELETE
+
+	- Run SELECT with the same WHERE and inspect results.
+	- Ensure you have a recent backup if data is important.
+	- Use transactions when possible: START TRANSACTION; DELETE ...; COMMIT;
+	- For bulk deletes, prefer batching and off-peak windows.
+
+10) Typical error and troubleshooting
+
+	- Error: "foreign key constraint fails" — solution: remove or archive child rows first, or add
+	  ON DELETE CASCADE if appropriate.
+	- Error: permission denied — solution: ask DBA for DELETE privileges or run as an account with
+	  sufficient rights.
+
+-----
+End of note. This file provides concise examples and recommended safe practices for deleting data from tables.
+
