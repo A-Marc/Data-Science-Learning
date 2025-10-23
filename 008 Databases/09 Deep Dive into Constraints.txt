@@ -1,0 +1,307 @@
+# SQL Constraints (MySQL)
+
+## What are Constraints?
+Rules applied to table columns to ensure data is correct and consistent. They prevent bad data from entering your database.
+
+## Types of Constraints
+
+1. **NOT NULL** - Column must have a value
+2. **UNIQUE** - No duplicate values allowed
+3. **PRIMARY KEY** - Unique identifier (NOT NULL + UNIQUE)
+4. **FOREIGN KEY** - Links two tables together
+5. **CHECK** - Value must meet a condition
+6. **DEFAULT** - Sets a default value
+
+---
+
+## 1. NOT NULL Constraint
+
+Column cannot be empty.
+
+```sql
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    age INT  -- Can be NULL
+);
+
+-- Works
+INSERT INTO students (name, email, age) 
+VALUES ('John Doe', 'john@email.com', 20);
+
+-- FAILS - email is required
+INSERT INTO students (name, age) 
+VALUES ('Jane Smith', 21);
+```
+
+---
+
+## 2. UNIQUE Constraint
+
+All values must be different.
+
+```sql
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Works
+INSERT INTO users (username, email) 
+VALUES ('john_doe', 'john@email.com');
+
+-- FAILS - username already exists
+INSERT INTO users (username, email) 
+VALUES ('john_doe', 'different@email.com');
+```
+
+**Composite UNIQUE:**
+```sql
+CREATE TABLE flight_bookings (
+    booking_id INT AUTO_INCREMENT PRIMARY KEY,
+    flight_number VARCHAR(10) NOT NULL,
+    seat_number VARCHAR(5) NOT NULL,
+    passenger_name VARCHAR(100) NOT NULL,
+    UNIQUE (flight_number, seat_number)
+);
+```
+
+---
+
+## 3. PRIMARY KEY Constraint
+
+Uniquely identifies each row.
+
+```sql
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    stock INT DEFAULT 0
+);
+
+INSERT INTO products (product_name, price, stock)
+VALUES ('Laptop', 50000.00, 10);
+```
+
+**Composite PRIMARY KEY:**
+```sql
+CREATE TABLE enrollments (
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    grade VARCHAR(2),
+    PRIMARY KEY (student_id, course_id)
+);
+```
+
+---
+
+## 4. FOREIGN KEY Constraint
+
+Links two tables together.
+
+```sql
+-- Parent table
+CREATE TABLE departments (
+    dept_id INT AUTO_INCREMENT PRIMARY KEY,
+    dept_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Child table
+CREATE TABLE employees (
+    emp_id INT AUTO_INCREMENT PRIMARY KEY,
+    emp_name VARCHAR(100) NOT NULL,
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+);
+
+-- Insert data
+INSERT INTO departments (dept_name) VALUES ('IT'), ('HR');
+INSERT INTO employees (emp_name, dept_id) VALUES ('John', 1);
+
+-- FAILS - department 99 doesn't exist
+INSERT INTO employees (emp_name, dept_id) VALUES ('Alice', 99);
+```
+
+**CASCADE Options:**
+```sql
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    total_amount DECIMAL(10, 2),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+```
+
+---
+
+## 5. CHECK Constraint
+
+Value must meet a condition (MySQL 8.0.16+).
+
+```sql
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
+    stock INT NOT NULL CHECK (stock >= 0),
+    discount INT CHECK (discount BETWEEN 0 AND 100)
+);
+
+-- Works
+INSERT INTO products (product_name, price, stock, discount)
+VALUES ('Laptop', 50000.00, 10, 15);
+
+-- FAILS - negative price
+INSERT INTO products (product_name, price, stock)
+VALUES ('Mouse', -500.00, 50);
+```
+
+**Multiple Conditions:**
+```sql
+CREATE TABLE employees (
+    emp_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    age INT CHECK (age >= 18 AND age <= 65),
+    salary DECIMAL(10, 2) CHECK (salary >= 15000),
+    department VARCHAR(50) CHECK (department IN ('IT', 'HR', 'Sales'))
+);
+```
+
+---
+
+## 6. DEFAULT Constraint
+
+Sets default value if none provided.
+
+```sql
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    stock INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert without stock, is_active, created_at
+INSERT INTO products (product_name, price)
+VALUES ('Laptop', 50000.00);
+```
+
+---
+
+## Complete Example: E-commerce Database
+
+```sql
+CREATE DATABASE shop;
+USE shop;
+
+-- Customers
+CREATE TABLE customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE CHECK (email LIKE '%@%'),
+    registration_date DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Products
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(200) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
+    stock INT DEFAULT 0 CHECK (stock >= 0)
+);
+
+-- Orders
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'Pending' 
+        CHECK (status IN ('Pending', 'Shipped', 'Delivered')),
+    total DECIMAL(10, 2) CHECK (total >= 0),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) 
+        ON DELETE CASCADE
+);
+
+-- Order Items
+CREATE TABLE order_items (
+    item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT CHECK (quantity > 0),
+    price DECIMAL(10, 2) CHECK (price > 0),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+-- Insert sample data
+INSERT INTO customers (name, email) 
+VALUES ('John Doe', 'john@email.com');
+
+INSERT INTO products (product_name, price, stock) 
+VALUES ('Laptop', 50000.00, 10), ('Mouse', 500.00, 50);
+
+INSERT INTO orders (customer_id, total) 
+VALUES (1, 50500.00);
+
+INSERT INTO order_items (order_id, product_id, quantity, price) 
+VALUES (1, 1, 1, 50000.00), (1, 2, 1, 500.00);
+
+-- View order details
+SELECT 
+    c.name, p.product_name, oi.quantity, oi.price, o.status
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id;
+```
+
+---
+
+## Managing Constraints
+
+**Add Constraints:**
+```sql
+ALTER TABLE products ADD UNIQUE (product_code);
+ALTER TABLE products ADD CONSTRAINT chk_price CHECK (price > 0);
+ALTER TABLE orders ADD FOREIGN KEY (customer_id) REFERENCES customers(customer_id);
+```
+
+**Drop Constraints:**
+```sql
+ALTER TABLE products DROP INDEX product_code;
+ALTER TABLE products DROP CHECK chk_price;
+ALTER TABLE orders DROP FOREIGN KEY orders_ibfk_1;
+```
+
+---
+
+## Quick Reference
+
+| Constraint    | Purpose                   | Example                                  |
+|---------------|---------------------------|------------------------------------------|
+| NOT NULL      | Must have value           | `name VARCHAR(100) NOT NULL`             |
+| UNIQUE        | No duplicates             | `email VARCHAR(100) UNIQUE`              |
+| PRIMARY KEY   | Unique ID                 | `id INT PRIMARY KEY`                     |
+| FOREIGN KEY   | Links tables              | `FOREIGN KEY (id) REFERENCES table(id)`  |
+| CHECK         | Must meet condition       | `age INT CHECK (age >= 18)`              |
+| DEFAULT       | Default value             | `status VARCHAR(20) DEFAULT 'Active'`    |
+
+---
+
+## Summary
+
+✅ Use **PRIMARY KEY** for every table  
+✅ Use **FOREIGN KEY** to link tables  
+✅ Use **NOT NULL** for required fields  
+✅ Use **UNIQUE** for fields like email, username  
+✅ Use **CHECK** to enforce business rules  
+✅ Use **DEFAULT** for common values
+
+Constraints keep your database clean, accurate, and reliable! 💪
