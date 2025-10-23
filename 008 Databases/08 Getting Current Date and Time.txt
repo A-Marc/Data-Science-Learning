@@ -1,0 +1,363 @@
+# Getting Current Date and Time in MySQL
+
+## What is it?
+"Current date/time" means the date and time right now (from the database server's clock). MySQL has easy functions to get this information.
+
+---
+
+## Basic Date and Time Functions
+
+### 1) NOW() - Get Current Date and Time
+Returns the current date and time together.
+
+```sql
+SELECT NOW();
+-- Output: 2025-10-23 14:30:12
+```
+
+### 2) CURDATE() - Get Current Date Only
+Returns only the date (no time).
+
+```sql
+SELECT CURDATE();
+-- Output: 2025-10-23
+```
+
+### 3) CURTIME() - Get Current Time Only
+Returns only the time (no date).
+
+```sql
+SELECT CURTIME();
+-- Output: 14:30:12
+```
+
+### 4) CURRENT_TIMESTAMP - Same as NOW()
+This is another way to get current date and time.
+
+```sql
+SELECT CURRENT_TIMESTAMP;
+-- Output: 2025-10-23 14:30:12
+```
+
+---
+
+## More Date and Time Functions
+
+### 5) SYSDATE() - System Date and Time
+Similar to NOW() but gets the exact time when it runs (useful in stored procedures).
+
+```sql
+SELECT SYSDATE();
+-- Output: 2025-10-23 14:30:12
+```
+
+### 6) UTC Date and Time
+Get date and time in UTC (Universal Time).
+
+```sql
+SELECT UTC_DATE();        -- UTC date only
+-- Output: 2025-10-23
+
+SELECT UTC_TIME();        -- UTC time only
+-- Output: 08:30:12
+
+SELECT UTC_TIMESTAMP();   -- UTC date and time
+-- Output: 2025-10-23 08:30:12
+```
+
+---
+
+## Using in Real Examples
+
+### Example 1: Simple SELECT Query
+```sql
+-- Show all date/time functions together
+SELECT 
+    NOW() AS current_datetime,
+    CURDATE() AS current_date,
+    CURTIME() AS current_time,
+    CURRENT_TIMESTAMP AS timestamp;
+```
+
+**Output:**
+```
+current_datetime     | current_date | current_time | timestamp
+---------------------|--------------|--------------|-------------------
+2025-10-23 14:30:12 | 2025-10-23   | 14:30:12     | 2025-10-23 14:30:12
+```
+
+---
+
+### Example 2: Create a Table with Auto Timestamp
+
+```sql
+-- Create a users table
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+**Explanation:**
+- `created_at` will automatically set to current time when you insert a new row
+- `updated_at` will automatically update to current time when you modify the row
+
+---
+
+### Example 3: Insert Data Without Specifying Time
+
+```sql
+-- Insert data (created_at and updated_at will be set automatically)
+INSERT INTO users (username, email) 
+VALUES ('john_doe', 'john@example.com');
+
+INSERT INTO users (username, email) 
+VALUES ('jane_smith', 'jane@example.com');
+
+-- See the results
+SELECT * FROM users;
+```
+
+**Output:**
+```
+id | username   | email              | created_at          | updated_at
+---|------------|--------------------|--------------------|--------------------
+1  | john_doe   | john@example.com   | 2025-10-23 14:30:12| 2025-10-23 14:30:12
+2  | jane_smith | jane@example.com   | 2025-10-23 14:31:05| 2025-10-23 14:31:05
+```
+
+---
+
+### Example 4: Update Record and See Time Change
+
+```sql
+-- Update a user's email
+UPDATE users 
+SET email = 'john.doe@newmail.com' 
+WHERE username = 'john_doe';
+
+-- Check the updated_at field
+SELECT username, email, created_at, updated_at 
+FROM users 
+WHERE username = 'john_doe';
+```
+
+**Output:**
+```
+username  | email                 | created_at          | updated_at
+----------|----------------------|---------------------|--------------------
+john_doe  | john.doe@newmail.com | 2025-10-23 14:30:12 | 2025-10-23 14:45:30
+```
+*Notice: created_at stayed the same, but updated_at changed!*
+
+---
+
+### Example 5: Blog Posts Table
+
+```sql
+-- Create a blog posts table
+CREATE TABLE blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    content TEXT,
+    author VARCHAR(50),
+    published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    views INT DEFAULT 0
+);
+
+-- Insert some blog posts
+INSERT INTO blog_posts (title, content, author) 
+VALUES 
+    ('My First Blog', 'This is my first blog post!', 'john_doe'),
+    ('Learning MySQL', 'MySQL is awesome for databases.', 'jane_smith');
+
+-- View all posts with their publish time
+SELECT id, title, author, published_at FROM blog_posts;
+```
+
+**Output:**
+```
+id | title           | author     | published_at
+---|-----------------|------------|--------------------
+1  | My First Blog   | john_doe   | 2025-10-23 14:30:12
+2  | Learning MySQL  | jane_smith | 2025-10-23 14:30:15
+```
+
+---
+
+### Example 6: Orders Table with Timestamps
+
+```sql
+-- Create orders table
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(100),
+    product VARCHAR(100),
+    quantity INT,
+    order_date DATE DEFAULT (CURDATE()),
+    order_time TIME DEFAULT (CURTIME()),
+    order_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert orders
+INSERT INTO orders (customer_name, product, quantity) 
+VALUES 
+    ('Alice', 'Laptop', 1),
+    ('Bob', 'Mouse', 2);
+
+-- View orders
+SELECT * FROM orders;
+```
+
+**Output:**
+```
+order_id | customer_name | product | quantity | order_date  | order_time | order_timestamp
+---------|--------------|---------|----------|-------------|------------|--------------------
+1        | Alice        | Laptop  | 1        | 2025-10-23  | 14:30:12   | 2025-10-23 14:30:12
+2        | Bob          | Mouse   | 2        | 2025-10-23  | 14:30:15   | 2025-10-23 14:30:15
+```
+
+---
+
+## Working with Date and Time in Queries
+
+### Example 7: Find Records from Today
+
+```sql
+-- Get all users who registered today
+SELECT * FROM users 
+WHERE DATE(created_at) = CURDATE();
+
+-- Get all orders placed today
+SELECT * FROM orders 
+WHERE order_date = CURDATE();
+```
+
+---
+
+### Example 8: Find Records from Last 7 Days
+
+```sql
+-- Get users registered in last 7 days
+SELECT username, email, created_at 
+FROM users 
+WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY);
+```
+
+---
+
+### Example 9: Format Date and Time
+
+```sql
+-- Format the current date and time nicely
+SELECT 
+    DATE_FORMAT(NOW(), '%W, %M %d, %Y') AS formatted_date,
+    DATE_FORMAT(NOW(), '%h:%i %p') AS formatted_time;
+```
+
+**Output:**
+```
+formatted_date              | formatted_time
+----------------------------|---------------
+Thursday, October 23, 2025  | 02:30 PM
+```
+
+---
+
+## Complete Practice Exercise
+
+Try this complete example:
+
+```sql
+-- Step 1: Create database
+CREATE DATABASE IF NOT EXISTS time_demo;
+USE time_demo;
+
+-- Step 2: Create a table
+CREATE TABLE activities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    activity_name VARCHAR(100),
+    description TEXT,
+    created_date DATE DEFAULT (CURDATE()),
+    created_time TIME DEFAULT (CURTIME()),
+    created_datetime DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Step 3: Insert some data
+INSERT INTO activities (activity_name, description) 
+VALUES 
+    ('Morning Exercise', 'Did 30 minutes of jogging'),
+    ('Study SQL', 'Learned about date and time functions'),
+    ('Project Work', 'Built a new feature for the app');
+
+-- Step 4: View the data
+SELECT * FROM activities;
+
+-- Step 5: Wait a moment and update one record
+UPDATE activities 
+SET description = 'Did 45 minutes of jogging - increased time!' 
+WHERE activity_name = 'Morning Exercise';
+
+-- Step 6: See the updated timestamp
+SELECT 
+    activity_name, 
+    description,
+    created_datetime,
+    last_updated,
+    TIMEDIFF(last_updated, created_datetime) AS time_difference
+FROM activities;
+
+-- Step 7: Get today's activities
+SELECT activity_name, created_datetime 
+FROM activities 
+WHERE DATE(created_datetime) = CURDATE();
+
+-- Step 8: Format dates nicely
+SELECT 
+    activity_name,
+    DATE_FORMAT(created_datetime, '%M %d, %Y at %h:%i %p') AS when_created
+FROM activities;
+```
+
+---
+
+## Important Notes
+
+✅ **NOW()** - Most commonly used, gives current date and time  
+✅ **CURDATE()** - Only date (useful for date columns)  
+✅ **CURTIME()** - Only time (useful for time columns)  
+✅ **CURRENT_TIMESTAMP** - Same as NOW(), SQL standard  
+✅ **DEFAULT CURRENT_TIMESTAMP** - Auto-fills when inserting  
+✅ **ON UPDATE CURRENT_TIMESTAMP** - Auto-updates when modifying  
+
+---
+
+## Quick Reference Table
+
+| Function           | Returns                    | Example Output          |
+|-------------------|----------------------------|-------------------------|
+| `NOW()`           | Date and Time              | 2025-10-23 14:30:12    |
+| `CURDATE()`       | Date only                  | 2025-10-23             |
+| `CURTIME()`       | Time only                  | 14:30:12               |
+| `CURRENT_TIMESTAMP`| Date and Time             | 2025-10-23 14:30:12    |
+| `SYSDATE()`       | System Date and Time       | 2025-10-23 14:30:12    |
+| `UTC_DATE()`      | UTC Date                   | 2025-10-23             |
+| `UTC_TIME()`      | UTC Time                   | 08:30:12               |
+| `UTC_TIMESTAMP()` | UTC Date and Time          | 2025-10-23 08:30:12    |
+
+---
+
+## Summary
+
+Getting current date and time in MySQL is super easy:
+- Use **NOW()** to get current date and time
+- Use **CURDATE()** to get only the date
+- Use **CURTIME()** to get only the time
+- Use **DEFAULT CURRENT_TIMESTAMP** in tables to auto-save creation time
+- Use **ON UPDATE CURRENT_TIMESTAMP** to auto-save last update time
+
+These functions help you track when data was created or changed automatically!
