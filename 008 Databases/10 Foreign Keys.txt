@@ -1,0 +1,215 @@
+==========================================
+    FOREIGN KEYS IN SQL - SHORT NOTES
+==========================================
+
+📌 WHAT IS A FOREIGN KEY?
+--------------------------
+• Links two tables together
+• Column in one table refers to PRIMARY KEY in another table
+• Creates parent-child relationship between tables
+• Ensures referential integrity (data consistency)
+
+
+📌 WHY USE FOREIGN KEYS?
+-------------------------
+• Prevents invalid data entry
+• Maintains data consistency across tables
+• Enforces relationships between tables
+• Prevents orphaned records
+
+
+==========================================
+CREATING TABLES WITH FOREIGN KEY
+==========================================
+
+-- Parent Table (Referenced table)
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    email VARCHAR(50)
+);
+
+-- Child Table (Referencing table)
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    order_date DATE,
+    customer_id INT,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);
+
+Output:
+Query OK, 0 rows affected
+
+
+==========================================
+ADDING FOREIGN KEY TO EXISTING TABLE
+==========================================
+
+ALTER TABLE orders
+ADD FOREIGN KEY (customer_id) REFERENCES customers(customer_id);
+
+Output:
+Query OK, 0 rows affected
+
+
+==========================================
+FOREIGN KEY WITH CONSTRAINTS
+==========================================
+
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+• ON DELETE CASCADE: Delete child records when parent is deleted
+• ON DELETE SET NULL: Set foreign key to NULL when parent deleted
+• ON UPDATE CASCADE: Update child records when parent key changes
+
+
+==========================================
+TESTING FOREIGN KEY CONSTRAINT
+==========================================
+
+-- Insert into parent table first
+INSERT INTO customers VALUES (1, 'John Doe', 'john@email.com');
+INSERT INTO customers VALUES (2, 'Jane Smith', 'jane@email.com');
+
+Output:
+Query OK, 1 row affected
+
+-- Insert into child table (VALID)
+INSERT INTO orders VALUES (101, '2025-01-15', 1);
+
+Output:
+Query OK, 1 row affected
+
+-- Insert into child table (INVALID - customer_id 99 doesn't exist)
+INSERT INTO orders VALUES (102, '2025-01-16', 99);
+
+Output:
+ERROR 1452: Cannot add or update a child row: a foreign key constraint fails
+
+
+==========================================
+VIEWING FOREIGN KEY CONSTRAINTS
+==========================================
+
+SHOW CREATE TABLE orders;
+
+Output:
+Shows table structure with FOREIGN KEY definitions
+
+-- Or use:
+SELECT * FROM information_schema.KEY_COLUMN_USAGE
+WHERE TABLE_NAME = 'orders';
+
+
+==========================================
+DROPPING FOREIGN KEY
+==========================================
+
+-- First, find the constraint name
+SHOW CREATE TABLE orders;
+
+-- Drop the foreign key (replace constraint_name with actual name)
+ALTER TABLE orders
+DROP FOREIGN KEY constraint_name;
+
+Output:
+Query OK, 0 rows affected
+
+
+==========================================
+MULTIPLE FOREIGN KEYS EXAMPLE
+==========================================
+
+CREATE TABLE order_items (
+    item_id INT PRIMARY KEY,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+• One table can have multiple foreign keys
+• Each references different parent table
+
+
+==========================================
+KEY POINTS TO REMEMBER
+==========================================
+
+✓ Foreign key must reference a PRIMARY KEY or UNIQUE column
+✓ Data types must match between foreign key and referenced column
+✓ Cannot insert value in child if it doesn't exist in parent
+✓ Cannot delete parent record if child records exist (unless CASCADE)
+✓ Helps maintain data integrity automatically
+✓ Slows down INSERT/UPDATE operations slightly (trade-off for data safety)
+
+
+==========================================
+COMMON ACTIONS ON DELETE/UPDATE
+==========================================
+
+1. CASCADE: Delete/Update child rows automatically
+2. SET NULL: Set foreign key to NULL
+3. RESTRICT: Prevent deletion/update (default)
+4. NO ACTION: Same as RESTRICT
+5. SET DEFAULT: Set to default value
+
+
+==========================================
+PRACTICAL EXAMPLE
+==========================================
+
+-- Create tables
+CREATE TABLE departments (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(50)
+);
+
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(50),
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+    ON DELETE SET NULL
+);
+
+-- Insert data
+INSERT INTO departments VALUES (1, 'IT'), (2, 'HR');
+INSERT INTO employees VALUES (101, 'Alice', 1), (102, 'Bob', 2);
+
+-- Check data
+SELECT * FROM employees;
+
+Output:
++--------+----------+---------+
+| emp_id | emp_name | dept_id |
++--------+----------+---------+
+|    101 | Alice    |       1 |
+|    102 | Bob      |       2 |
++--------+----------+---------+
+
+-- Delete department
+DELETE FROM departments WHERE dept_id = 1;
+
+-- Check employees again
+SELECT * FROM employees;
+
+Output:
++--------+----------+---------+
+| emp_id | emp_name | dept_id |
++--------+----------+---------+
+|    101 | Alice    |    NULL |  (Set to NULL because of ON DELETE SET NULL)
+|    102 | Bob      |       2 |
++--------+----------+---------+
+
+
+==========================================
+END OF NOTES
+==========================================
