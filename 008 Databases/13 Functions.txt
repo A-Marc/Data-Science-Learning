@@ -1,0 +1,556 @@
+MySQL Functions - Quick Notes
+
+Goal: Short, simple guide to common MySQL functions with examples and outputs.
+
+What are Functions?
+- Built-in operations that take input and return a result.
+- Used in SELECT, WHERE, ORDER BY, and other SQL clauses.
+- Categories: String, Numeric, Date/Time, Aggregate, and more.
+
+Sample table for examples:
+
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  name VARCHAR(50),
+  price DECIMAL(10,2),
+  stock INT,
+  category VARCHAR(30),
+  created_date DATE
+);
+
+INSERT INTO products VALUES
+(1, 'Laptop', 75000.50, 10, 'Electronics', '2024-01-15'),
+(2, 'Mouse', 500.00, 50, 'Electronics', '2024-02-20'),
+(3, 'Keyboard', 1500.75, 30, 'Electronics', '2024-03-10'),
+(4, 'Chair', 5000.00, 15, 'Furniture', '2024-01-25'),
+(5, 'Desk', 12000.00, 8, 'Furniture', '2024-04-05');
+
+Products table:
+id | name     | price     | stock | category    | created_date
+---+----------+-----------+-------+-------------+-------------
+1  | Laptop   | 75000.50  | 10    | Electronics | 2024-01-15
+2  | Mouse    | 500.00    | 50    | Electronics | 2024-02-20
+3  | Keyboard | 1500.75   | 30    | Electronics | 2024-03-10
+4  | Chair    | 5000.00   | 15    | Furniture   | 2024-01-25
+5  | Desk     | 12000.00  | 8     | Furniture   | 2024-04-05
+
+================================================================================
+1) STRING FUNCTIONS
+================================================================================
+
+1.1) UPPER() / LOWER()
+- What: converts text to uppercase/lowercase.
+
+Example:
+SELECT name, UPPER(name) AS upper_name, LOWER(name) AS lower_name
+FROM products LIMIT 2;
+
+Output:
+name     | upper_name | lower_name
+---------+------------+-----------
+Laptop   | LAPTOP     | laptop
+Mouse    | MOUSE      | mouse
+
+1.2) LENGTH() / CHAR_LENGTH()
+- What: returns length of string (LENGTH in bytes, CHAR_LENGTH in characters).
+
+Example:
+SELECT name, LENGTH(name) AS byte_len, CHAR_LENGTH(name) AS char_len
+FROM products LIMIT 3;
+
+Output:
+name     | byte_len | char_len
+---------+----------+---------
+Laptop   | 6        | 6
+Mouse    | 5        | 5
+Keyboard | 8        | 8
+
+1.3) CONCAT() / CONCAT_WS()
+- What: joins multiple strings together.
+- CONCAT_WS(): first argument is separator.
+
+Example:
+SELECT CONCAT(name, ' - ', category) AS full_desc,
+       CONCAT_WS(' | ', name, price, stock) AS pipe_sep
+FROM products LIMIT 2;
+
+Output:
+full_desc              | pipe_sep
+-----------------------+---------------------------
+Laptop - Electronics   | Laptop | 75000.50 | 10
+Mouse - Electronics    | Mouse | 500.00 | 50
+
+1.4) SUBSTRING() / SUBSTR()
+- What: extracts part of a string.
+- Syntax: SUBSTRING(string, start, length)
+
+Example:
+SELECT name, SUBSTRING(name, 1, 3) AS first_3
+FROM products LIMIT 3;
+
+Output:
+name     | first_3
+---------+--------
+Laptop   | Lap
+Mouse    | Mou
+Keyboard | Key
+
+1.5) REPLACE()
+- What: replaces all occurrences of a substring.
+
+Example:
+SELECT name, REPLACE(name, 'o', 'O') AS replaced
+FROM products WHERE name LIKE '%o%';
+
+Output:
+name     | replaced
+---------+----------
+Laptop   | LaptOp
+Mouse    | MOuse
+Keyboard | KeybOard
+
+1.6) TRIM() / LTRIM() / RTRIM()
+- What: removes spaces from both sides / left / right.
+
+Example:
+SELECT TRIM('  hello  ') AS trimmed,
+       LTRIM('  hello  ') AS left_trim,
+       RTRIM('  hello  ') AS right_trim;
+
+Output:
+trimmed | left_trim | right_trim
+--------+-----------+------------
+hello   | hello     |   hello
+
+1.7) LOCATE() / POSITION()
+- What: finds position of substring (returns 0 if not found).
+
+Example:
+SELECT name, LOCATE('a', name) AS pos_a
+FROM products LIMIT 3;
+
+Output:
+name     | pos_a
+---------+------
+Laptop   | 2
+Mouse    | 0
+Keyboard | 5
+
+================================================================================
+2) NUMERIC FUNCTIONS
+================================================================================
+
+2.1) ROUND() / CEIL() / FLOOR()
+- What: rounds numbers.
+- ROUND(n, d): rounds to d decimal places.
+- CEIL(): rounds up, FLOOR(): rounds down.
+
+Example:
+SELECT price,
+       ROUND(price, 0) AS rounded,
+       CEIL(price) AS ceiling,
+       FLOOR(price) AS floor_val
+FROM products LIMIT 3;
+
+Output:
+price    | rounded | ceiling | floor_val
+---------+---------+---------+----------
+75000.50 | 75001   | 75001   | 75000
+500.00   | 500     | 500     | 500
+1500.75  | 1501    | 1501    | 1500
+
+2.2) ABS()
+- What: returns absolute (positive) value.
+
+Example:
+SELECT ABS(-100) AS absolute, ABS(50) AS positive;
+
+Output:
+absolute | positive
+---------+---------
+100      | 50
+
+2.3) POW() / POWER() / SQRT()
+- What: power and square root.
+
+Example:
+SELECT POW(2, 3) AS two_cubed,
+       POWER(5, 2) AS five_squared,
+       SQRT(16) AS square_root;
+
+Output:
+two_cubed | five_squared | square_root
+----------+--------------+------------
+8         | 25           | 4
+
+2.4) MOD()
+- What: returns remainder of division.
+
+Example:
+SELECT stock, MOD(stock, 3) AS remainder
+FROM products LIMIT 3;
+
+Output:
+stock | remainder
+------+----------
+10    | 1
+50    | 2
+30    | 0
+
+2.5) GREATEST() / LEAST()
+- What: returns largest/smallest value from a list.
+
+Example:
+SELECT GREATEST(10, 20, 5, 30) AS max_val,
+       LEAST(10, 20, 5, 30) AS min_val;
+
+Output:
+max_val | min_val
+--------+--------
+30      | 5
+
+================================================================================
+3) DATE AND TIME FUNCTIONS
+================================================================================
+
+3.1) NOW() / CURDATE() / CURTIME()
+- What: returns current datetime / date / time.
+
+Example:
+SELECT NOW() AS current_datetime,
+       CURDATE() AS current_date,
+       CURTIME() AS current_time;
+
+Output:
+current_datetime    | current_date | current_time
+--------------------+--------------+-------------
+2024-10-28 14:30:45 | 2024-10-28   | 14:30:45
+
+3.2) DATE() / TIME() / YEAR() / MONTH() / DAY()
+- What: extracts parts from a datetime.
+
+Example:
+SELECT created_date,
+       YEAR(created_date) AS year,
+       MONTH(created_date) AS month,
+       DAY(created_date) AS day
+FROM products LIMIT 3;
+
+Output:
+created_date | year | month | day
+-------------+------+-------+----
+2024-01-15   | 2024 | 1     | 15
+2024-02-20   | 2024 | 2     | 20
+2024-03-10   | 2024 | 3     | 10
+
+3.3) DATEDIFF()
+- What: returns difference in days between two dates.
+
+Example:
+SELECT name, created_date,
+       DATEDIFF(CURDATE(), created_date) AS days_ago
+FROM products LIMIT 3;
+
+Output (assuming current date is 2024-10-28):
+name     | created_date | days_ago
+---------+--------------+---------
+Laptop   | 2024-01-15   | 287
+Mouse    | 2024-02-20   | 251
+Keyboard | 2024-03-10   | 232
+
+3.4) DATE_ADD() / DATE_SUB()
+- What: adds/subtracts interval from date.
+
+Example:
+SELECT created_date,
+       DATE_ADD(created_date, INTERVAL 30 DAY) AS plus_30_days,
+       DATE_SUB(created_date, INTERVAL 1 MONTH) AS minus_1_month
+FROM products LIMIT 2;
+
+Output:
+created_date | plus_30_days | minus_1_month
+-------------+--------------+--------------
+2024-01-15   | 2024-02-14   | 2023-12-15
+2024-02-20   | 2024-03-21   | 2024-01-20
+
+3.5) DATE_FORMAT()
+- What: formats date as string.
+- Common formats: %Y=year, %m=month, %d=day, %H=hour, %i=minute, %s=second
+
+Example:
+SELECT created_date,
+       DATE_FORMAT(created_date, '%d-%m-%Y') AS formatted,
+       DATE_FORMAT(created_date, '%M %d, %Y') AS long_format
+FROM products LIMIT 2;
+
+Output:
+created_date | formatted  | long_format
+-------------+------------+------------------
+2024-01-15   | 15-01-2024 | January 15, 2024
+2024-02-20   | 20-02-2024 | February 20, 2024
+
+3.6) DAYNAME() / MONTHNAME()
+- What: returns name of day/month.
+
+Example:
+SELECT created_date,
+       DAYNAME(created_date) AS day_name,
+       MONTHNAME(created_date) AS month_name
+FROM products LIMIT 3;
+
+Output:
+created_date | day_name  | month_name
+-------------+-----------+-----------
+2024-01-15   | Monday    | January
+2024-02-20   | Tuesday   | February
+2024-03-10   | Sunday    | March
+
+================================================================================
+4) AGGREGATE FUNCTIONS (work on multiple rows)
+================================================================================
+
+4.1) COUNT()
+- What: counts number of rows.
+
+Example:
+SELECT COUNT(*) AS total_products,
+       COUNT(DISTINCT category) AS total_categories
+FROM products;
+
+Output:
+total_products | total_categories
+---------------+-----------------
+5              | 2
+
+4.2) SUM()
+- What: adds up numeric values.
+
+Example:
+SELECT category, SUM(stock) AS total_stock
+FROM products
+GROUP BY category;
+
+Output:
+category    | total_stock
+------------+------------
+Electronics | 90
+Furniture   | 23
+
+4.3) AVG()
+- What: calculates average.
+
+Example:
+SELECT category, AVG(price) AS avg_price
+FROM products
+GROUP BY category;
+
+Output:
+category    | avg_price
+------------+-----------
+Electronics | 25667.08
+Furniture   | 8500.00
+
+4.4) MIN() / MAX()
+- What: finds minimum/maximum value.
+
+Example:
+SELECT MIN(price) AS cheapest,
+       MAX(price) AS most_expensive,
+       MIN(created_date) AS oldest_product
+FROM products;
+
+Output:
+cheapest | most_expensive | oldest_product
+---------+----------------+---------------
+500.00   | 75000.50       | 2024-01-15
+
+4.5) GROUP_CONCAT()
+- What: combines multiple rows into one string.
+
+Example:
+SELECT category, GROUP_CONCAT(name SEPARATOR ', ') AS product_list
+FROM products
+GROUP BY category;
+
+Output:
+category    | product_list
+------------+-------------------------------
+Electronics | Laptop, Mouse, Keyboard
+Furniture   | Chair, Desk
+
+================================================================================
+5) CONTROL FLOW FUNCTIONS
+================================================================================
+
+5.1) IF()
+- What: returns one value if condition is true, another if false.
+- Syntax: IF(condition, value_if_true, value_if_false)
+
+Example:
+SELECT name, stock,
+       IF(stock > 20, 'High Stock', 'Low Stock') AS stock_status
+FROM products;
+
+Output:
+name     | stock | stock_status
+---------+-------+-------------
+Laptop   | 10    | Low Stock
+Mouse    | 50    | High Stock
+Keyboard | 30    | High Stock
+Chair    | 15    | Low Stock
+Desk     | 8     | Low Stock
+
+5.2) CASE
+- What: multi-condition IF (like switch statement).
+
+Example:
+SELECT name, price,
+       CASE
+         WHEN price < 1000 THEN 'Cheap'
+         WHEN price BETWEEN 1000 AND 10000 THEN 'Medium'
+         ELSE 'Expensive'
+       END AS price_range
+FROM products;
+
+Output:
+name     | price    | price_range
+---------+----------+------------
+Laptop   | 75000.50 | Expensive
+Mouse    | 500.00   | Cheap
+Keyboard | 1500.75  | Medium
+Chair    | 5000.00  | Medium
+Desk     | 12000.00 | Expensive
+
+5.3) IFNULL() / COALESCE()
+- What: returns alternative value if NULL.
+
+Example:
+SELECT name, IFNULL(stock, 0) AS stock_safe,
+       COALESCE(stock, 0) AS stock_safe2
+FROM products LIMIT 2;
+
+Output:
+name   | stock_safe | stock_safe2
+-------+------------+------------
+Laptop | 10         | 10
+Mouse  | 50         | 50
+
+================================================================================
+6) OTHER USEFUL FUNCTIONS
+================================================================================
+
+6.1) CAST() / CONVERT()
+- What: converts data type.
+
+Example:
+SELECT price,
+       CAST(price AS SIGNED) AS as_integer,
+       CONVERT(created_date, CHAR) AS as_string
+FROM products LIMIT 2;
+
+Output:
+price    | as_integer | as_string
+---------+------------+-----------
+75000.50 | 75001      | 2024-01-15
+500.00   | 500        | 2024-02-20
+
+6.2) NULLIF()
+- What: returns NULL if two values are equal, otherwise returns first value.
+
+Example:
+SELECT NULLIF(10, 10) AS same,
+       NULLIF(10, 20) AS different;
+
+Output:
+same | different
+-----+----------
+NULL | 10
+
+6.3) DATABASE() / USER() / VERSION()
+- What: returns current database/user/MySQL version.
+
+Example:
+SELECT DATABASE() AS current_db,
+       USER() AS current_user,
+       VERSION() AS mysql_version;
+
+Output:
+current_db  | current_user     | mysql_version
+------------+------------------+--------------
+mydb        | root@localhost   | 8.0.33
+
+================================================================================
+COMBINING FUNCTIONS
+================================================================================
+
+Example: Complex query using multiple functions
+
+SELECT
+  UPPER(SUBSTRING(name, 1, 3)) AS code,
+  name,
+  CONCAT('₹', FORMAT(price, 2)) AS formatted_price,
+  ROUND(price * 0.9, 2) AS discounted_price,
+  DATEDIFF(CURDATE(), created_date) AS age_days,
+  IF(stock < 20, 'Order More', 'Sufficient') AS order_status
+FROM products
+WHERE category = 'Electronics'
+ORDER BY price DESC;
+
+Output:
+code | name     | formatted_price | discounted_price | age_days | order_status
+-----+----------+-----------------+------------------+----------+-------------
+LAP  | Laptop   | ₹75,000.50      | 67500.45         | 287      | Order More
+KEY  | Keyboard | ₹1,500.75       | 1350.68          | 232      | Sufficient
+MOU  | Mouse    | ₹500.00         | 450.00           | 251      | Sufficient
+
+================================================================================
+QUICK REFERENCE CHEAT SHEET
+================================================================================
+
+String Functions:
+- UPPER(), LOWER() → case conversion
+- CONCAT(), CONCAT_WS() → join strings
+- SUBSTRING() → extract part
+- LENGTH() → string length
+- REPLACE() → replace substring
+- TRIM() → remove spaces
+
+Numeric Functions:
+- ROUND(), CEIL(), FLOOR() → rounding
+- ABS() → absolute value
+- POW(), SQRT() → power and root
+- MOD() → remainder
+
+Date Functions:
+- NOW(), CURDATE(), CURTIME() → current date/time
+- YEAR(), MONTH(), DAY() → extract parts
+- DATEDIFF() → date difference
+- DATE_ADD(), DATE_SUB() → add/subtract dates
+- DATE_FORMAT() → format date
+
+Aggregate Functions:
+- COUNT() → count rows
+- SUM() → total
+- AVG() → average
+- MIN(), MAX() → minimum/maximum
+- GROUP_CONCAT() → combine rows
+
+Control Flow:
+- IF() → simple condition
+- CASE → multiple conditions
+- IFNULL(), COALESCE() → handle NULL
+
+Important tips:
+✓ Functions can be nested: UPPER(SUBSTRING(name, 1, 3))
+✓ Use aliases (AS) for readability
+✓ Aggregate functions require GROUP BY for non-aggregated columns
+✓ String functions are case-sensitive in some collations
+✓ Date functions depend on server timezone settings
+
+Common mistakes:
+✗ Forgetting GROUP BY with aggregate functions
+✗ Wrong number of arguments in functions
+✗ Using aggregate functions in WHERE (use HAVING instead)
+✗ Not handling NULL values properly
+
+End of notes.
