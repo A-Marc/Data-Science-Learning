@@ -1,0 +1,408 @@
+MySQL Views - Quick Notes
+
+Goal: Short, simple guide to Views with examples and outputs.
+
+What is a View?
+- A virtual table based on a SELECT query.
+- Does NOT store data itself (just stores the query).
+- Acts like a real table - you can SELECT from it.
+- Simplifies complex queries and provides security.
+
+Why use Views?
+✓ Hide complex queries behind simple names
+✓ Restrict access to specific columns (security)
+✓ Reuse common queries
+✓ Present data in different formats
+
+Sample tables for examples:
+
+CREATE TABLE employees (
+  id INT PRIMARY KEY,
+  name VARCHAR(50),
+  dept_id INT,
+  salary DECIMAL(10,2),
+  hire_date DATE
+);
+
+INSERT INTO employees VALUES
+(1, 'Alice', 1, 60000, '2020-01-15'),
+(2, 'Bob', 2, 75000, '2019-03-20'),
+(3, 'Charlie', 1, 55000, '2021-06-10'),
+(4, 'David', 3, 80000, '2018-11-05'),
+(5, 'Eve', 2, 70000, '2020-09-25');
+
+CREATE TABLE departments (
+  id INT PRIMARY KEY,
+  dept_name VARCHAR(50)
+);
+
+INSERT INTO departments VALUES
+(1, 'HR'),
+(2, 'Sales'),
+(3, 'IT');
+
+employees table:
+id | name    | dept_id | salary  | hire_date
+---+---------+---------+---------+-----------
+1  | Alice   | 1       | 60000   | 2020-01-15
+2  | Bob     | 2       | 75000   | 2019-03-20
+3  | Charlie | 1       | 55000   | 2021-06-10
+4  | David   | 3       | 80000   | 2018-11-05
+5  | Eve     | 2       | 70000   | 2020-09-25
+
+departments table:
+id | dept_name
+---+----------
+1  | HR
+2  | Sales
+3  | IT
+
+================================================================================
+1) CREATING A VIEW
+================================================================================
+
+Syntax:
+CREATE VIEW view_name AS
+SELECT column1, column2, ...
+FROM table_name
+WHERE condition;
+
+Example 1: Simple view
+CREATE VIEW hr_employees AS
+SELECT id, name, salary
+FROM employees
+WHERE dept_id = 1;
+
+-- Using the view
+SELECT * FROM hr_employees;
+
+Output:
+id | name    | salary
+---+---------+--------
+1  | Alice   | 60000
+3  | Charlie | 55000
+
+Example 2: View with JOIN
+CREATE VIEW employee_details AS
+SELECT e.id, e.name, d.dept_name, e.salary
+FROM employees e
+JOIN departments d ON e.dept_id = d.id;
+
+-- Using the view
+SELECT * FROM employee_details;
+
+Output:
+id | name    | dept_name | salary
+---+---------+-----------+--------
+1  | Alice   | HR        | 60000
+2  | Bob     | Sales     | 75000
+3  | Charlie | HR        | 55000
+4  | David   | IT        | 80000
+5  | Eve     | Sales     | 70000
+
+Example 3: View with calculations
+CREATE VIEW employee_summary AS
+SELECT
+  d.dept_name,
+  COUNT(*) AS employee_count,
+  AVG(e.salary) AS avg_salary,
+  MAX(e.salary) AS max_salary
+FROM employees e
+JOIN departments d ON e.dept_id = d.id
+GROUP BY d.dept_name;
+
+-- Using the view
+SELECT * FROM employee_summary;
+
+Output:
+dept_name | employee_count | avg_salary | max_salary
+----------+----------------+------------+-----------
+HR        | 2              | 57500.00   | 60000
+Sales     | 2              | 72500.00   | 75000
+IT        | 1              | 80000.00   | 80000
+
+================================================================================
+2) VIEWING EXISTING VIEWS
+================================================================================
+
+Show all views in database:
+SHOW FULL TABLES WHERE table_type = 'VIEW';
+
+Output:
+Tables_in_mydb      | Table_type
+--------------------+-----------
+hr_employees        | VIEW
+employee_details    | VIEW
+employee_summary    | VIEW
+
+Show view definition:
+SHOW CREATE VIEW employee_details;
+
+Output:
+View            | Create View                                    | ...
+----------------+------------------------------------------------+----
+employee_details| CREATE VIEW employee_details AS SELECT e.id... | ...
+
+================================================================================
+3) QUERYING VIEWS
+================================================================================
+
+Views work just like tables!
+
+Example 1: Simple SELECT
+SELECT * FROM employee_details
+WHERE salary > 60000;
+
+Output:
+id | name  | dept_name | salary
+---+-------+-----------+--------
+2  | Bob   | Sales     | 75000
+4  | David | IT        | 80000
+5  | Eve   | Sales     | 70000
+
+Example 2: WHERE clause
+SELECT name, dept_name
+FROM employee_details
+WHERE dept_name = 'Sales';
+
+Output:
+name | dept_name
+-----+----------
+Bob  | Sales
+Eve  | Sales
+
+Example 3: ORDER BY
+SELECT * FROM employee_details
+ORDER BY salary DESC;
+
+Output:
+id | name    | dept_name | salary
+---+---------+-----------+--------
+4  | David   | IT        | 80000
+2  | Bob     | Sales     | 75000
+5  | Eve     | Sales     | 70000
+1  | Alice   | HR        | 60000
+3  | Charlie | HR        | 55000
+
+Example 4: Aggregate on view
+SELECT dept_name, AVG(salary) AS avg_sal
+FROM employee_details
+GROUP BY dept_name;
+
+Output:
+dept_name | avg_sal
+----------+---------
+HR        | 57500.00
+Sales     | 72500.00
+IT        | 80000.00
+
+================================================================================
+4) UPDATING VIEWS
+================================================================================
+
+Modify existing view definition:
+
+Syntax:
+CREATE OR REPLACE VIEW view_name AS
+SELECT ...;
+
+Example:
+CREATE OR REPLACE VIEW hr_employees AS
+SELECT id, name, salary, hire_date
+FROM employees
+WHERE dept_id = 1;
+
+-- Now includes hire_date
+SELECT * FROM hr_employees;
+
+Output:
+id | name    | salary | hire_date
+---+---------+--------+-----------
+1  | Alice   | 60000  | 2020-01-15
+3  | Charlie | 55000  | 2021-06-10
+
+Alternative syntax:
+ALTER VIEW view_name AS
+SELECT ...;
+
+================================================================================
+5) DROPPING VIEWS
+================================================================================
+
+Delete a view:
+
+DROP VIEW view_name;
+
+Example:
+DROP VIEW hr_employees;
+
+Drop if exists (no error if doesn't exist):
+DROP VIEW IF EXISTS hr_employees;
+
+Drop multiple views:
+DROP VIEW view1, view2, view3;
+
+================================================================================
+6) INSERTING/UPDATING DATA THROUGH VIEWS
+================================================================================
+
+Some views are UPDATABLE (can INSERT/UPDATE/DELETE through them).
+
+Requirements for updatable view:
+✓ No DISTINCT, GROUP BY, HAVING, UNION
+✓ No aggregate functions (SUM, COUNT, etc.)
+✓ No subqueries in SELECT
+✓ Based on single table (simple JOINs may work)
+
+Example: Updatable view
+CREATE VIEW sales_employees AS
+SELECT id, name, salary
+FROM employees
+WHERE dept_id = 2;
+
+-- INSERT through view
+INSERT INTO sales_employees (id, name, salary)
+VALUES (6, 'Frank', 72000);
+
+-- UPDATE through view
+UPDATE sales_employees
+SET salary = 76000
+WHERE name = 'Bob';
+
+-- Check base table
+SELECT * FROM employees WHERE dept_id = 2;
+
+Output:
+id | name  | dept_id | salary | hire_date
+---+-------+---------+--------+-----------
+2  | Bob   | 2       | 76000  | 2019-03-20
+5  | Eve   | 2       | 70000  | 2020-09-25
+6  | Frank | 2       | 72000  | NULL
+
+Note: Frank was inserted BUT dept_id is NULL (not in view definition).
+
+WITH CHECK OPTION:
+Prevents inserting/updating rows that won't be visible in the view.
+
+CREATE VIEW sales_employees AS
+SELECT id, name, dept_id, salary
+FROM employees
+WHERE dept_id = 2
+WITH CHECK OPTION;
+
+-- This will FAIL (dept_id != 2)
+INSERT INTO sales_employees VALUES (7, 'Grace', 1, 65000);
+-- Error: CHECK OPTION failed
+
+-- This will SUCCEED (dept_id = 2)
+INSERT INTO sales_employees VALUES (7, 'Grace', 2, 65000);
+
+================================================================================
+7) PRACTICAL USE CASES
+================================================================================
+
+Use Case 1: Security (hide sensitive columns)
+CREATE VIEW public_employees AS
+SELECT id, name, dept_id
+FROM employees;
+-- Salary is hidden from this view
+
+Use Case 2: Simplify complex queries
+CREATE VIEW high_performers AS
+SELECT e.name, d.dept_name, e.salary
+FROM employees e
+JOIN departments d ON e.dept_id = d.id
+WHERE e.salary > (SELECT AVG(salary) FROM employees);
+
+SELECT * FROM high_performers;
+
+Output:
+name  | dept_name | salary
+------+-----------+--------
+Bob   | Sales     | 75000
+David | IT        | 80000
+Eve   | Sales     | 70000
+
+Use Case 3: Different data perspectives
+CREATE VIEW recent_hires AS
+SELECT name, dept_id, hire_date
+FROM employees
+WHERE hire_date >= DATE_SUB(CURDATE(), INTERVAL 3 YEAR);
+
+Use Case 4: Reporting
+CREATE VIEW monthly_stats AS
+SELECT
+  YEAR(hire_date) AS year,
+  MONTH(hire_date) AS month,
+  COUNT(*) AS hires,
+  AVG(salary) AS avg_starting_salary
+FROM employees
+GROUP BY YEAR(hire_date), MONTH(hire_date);
+
+================================================================================
+ADVANTAGES vs DISADVANTAGES
+================================================================================
+
+Advantages:
+✓ Simplify complex queries
+✓ Improve security (restrict column/row access)
+✓ Provide data abstraction
+✓ Consistent interface even if base tables change
+✓ Reusable across multiple queries
+
+Disadvantages:
+✗ Performance overhead (query executed each time)
+✗ Cannot have indexes on views (indexed views in some DBs)
+✗ Complex views are not updatable
+✗ Can make debugging harder
+
+================================================================================
+VIEWS vs TABLES vs TEMPORARY TABLES
+================================================================================
+
+Views:
+- Virtual, no data stored
+- Always up-to-date with base tables
+- Slower (query runs each time)
+- Permanent (until dropped)
+
+Tables:
+- Physical, data stored on disk
+- Must be updated manually
+- Faster (direct access)
+- Permanent
+
+Temporary Tables:
+- Physical, stored temporarily
+- Exist only in current session
+- Fast for complex operations
+- Auto-deleted when session ends
+
+================================================================================
+QUICK TIPS
+================================================================================
+
+1. Name views descriptively (e.g., vw_employee_details or employee_details_view)
+2. Document what each view does
+3. Use views for frequently used complex queries
+4. Don't nest views too deeply (performance impact)
+5. Use WITH CHECK OPTION for updatable views
+6. Grant permissions on views, not base tables (security)
+7. Consider materialized views for performance (if supported)
+
+Common mistakes:
+✗ Creating views on views on views (deep nesting)
+✗ Assuming all views are updatable
+✗ Not using WITH CHECK OPTION when needed
+✗ Forgetting to grant permissions on views
+
+Quick command reference:
+
+CREATE VIEW view_name AS SELECT ...;
+CREATE OR REPLACE VIEW view_name AS SELECT ...;
+DROP VIEW view_name;
+DROP VIEW IF EXISTS view_name;
+SHOW FULL TABLES WHERE table_type = 'VIEW';
+SHOW CREATE VIEW view_name;
+
+End of notes.
