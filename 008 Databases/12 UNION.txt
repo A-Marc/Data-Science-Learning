@@ -1,0 +1,207 @@
+UNION in MySQL - Quick Notes
+
+Goal: Short, simple pointers about UNION with examples and outputs.
+
+What is UNION?
+- Combines results from two or more SELECT queries into one result set.
+- Removes duplicate rows by default.
+- All SELECT statements must have the same number of columns with compatible data types.
+
+Syntax:
+SELECT column1, column2 FROM table1
+UNION
+SELECT column1, column2 FROM table2;
+
+Sample tables for examples:
+
+-- employees_2023 table
+CREATE TABLE employees_2023 (
+  id INT,
+  name VARCHAR(30),
+  dept VARCHAR(30)
+);
+
+INSERT INTO employees_2023 (id, name, dept) VALUES
+(1, 'Alice', 'HR'),
+(2, 'Bob', 'Sales'),
+(3, 'Charlie', 'IT');
+
+-- employees_2024 table
+CREATE TABLE employees_2024 (
+  id INT,
+  name VARCHAR(30),
+  dept VARCHAR(30)
+);
+
+INSERT INTO employees_2024 (id, name, dept) VALUES
+(2, 'Bob', 'Sales'),
+(3, 'Charlie', 'IT'),
+(4, 'David', 'Marketing'),
+(5, 'Eve', 'HR');
+
+Tables (content):
+
+employees_2023
+id | name    | dept
+---+---------+---------
+1  | Alice   | HR
+2  | Bob     | Sales
+3  | Charlie | IT
+
+employees_2024
+id | name    | dept
+---+---------+-----------
+2  | Bob     | Sales
+3  | Charlie | IT
+4  | David   | Marketing
+5  | Eve     | HR
+
+1) UNION (removes duplicates)
+- What: combines results and removes duplicate rows.
+- Use: when you want unique rows from multiple queries.
+
+Example:
+SELECT id, name, dept FROM employees_2023
+UNION
+SELECT id, name, dept FROM employees_2024;
+
+Output (duplicates removed - Bob and Charlie appear only once):
+id | name    | dept
+---+---------+-----------
+1  | Alice   | HR
+2  | Bob     | Sales
+3  | Charlie | IT
+4  | David   | Marketing
+5  | Eve     | HR
+
+(Total: 5 unique rows)
+
+2) UNION ALL (keeps duplicates)
+- What: combines results and keeps ALL rows including duplicates.
+- Use: when you need to see all rows from both queries (faster than UNION).
+
+Example:
+SELECT id, name, dept FROM employees_2023
+UNION ALL
+SELECT id, name, dept FROM employees_2024;
+
+Output (all rows kept - Bob and Charlie appear twice):
+id | name    | dept
+---+---------+-----------
+1  | Alice   | HR
+2  | Bob     | Sales
+3  | Charlie | IT
+2  | Bob     | Sales
+3  | Charlie | IT
+4  | David   | Marketing
+5  | Eve     | HR
+
+(Total: 7 rows)
+
+3) UNION with WHERE clause
+- What: filter rows before combining.
+
+Example:
+SELECT name, dept FROM employees_2023 WHERE dept = 'HR'
+UNION
+SELECT name, dept FROM employees_2024 WHERE dept = 'HR';
+
+Output (only HR employees):
+name  | dept
+------+-----
+Alice | HR
+Eve   | HR
+
+4) UNION with ORDER BY
+- What: sort the final combined result.
+- Note: ORDER BY goes at the end, after the last SELECT.
+
+Example:
+SELECT name, dept FROM employees_2023
+UNION
+SELECT name, dept FROM employees_2024
+ORDER BY name;
+
+Output (sorted by name):
+name    | dept
+--------+-----------
+Alice   | HR
+Bob     | Sales
+Charlie | IT
+David   | Marketing
+Eve     | HR
+
+5) UNION with different tables/columns
+- What: combine different tables as long as column count and types match.
+
+Example (combining employees with contractors):
+CREATE TABLE contractors (
+  contractor_id INT,
+  contractor_name VARCHAR(30),
+  department VARCHAR(30)
+);
+
+INSERT INTO contractors VALUES (101, 'Frank', 'IT'), (102, 'Grace', 'Sales');
+
+SELECT id AS emp_id, name, dept FROM employees_2023
+UNION
+SELECT contractor_id, contractor_name, department FROM contractors;
+
+Output:
+emp_id | name    | dept
+-------+---------+-------
+1      | Alice   | HR
+2      | Bob     | Sales
+3      | Charlie | IT
+101    | Frank   | IT
+102    | Grace   | Sales
+
+Important rules:
+- Number of columns must match in all SELECT statements.
+- Column data types must be compatible (MySQL converts if needed).
+- Column names in result come from the first SELECT.
+- UNION removes duplicates (slower), UNION ALL keeps all (faster).
+- Use ORDER BY only once at the end, not in individual SELECTs.
+
+Common use cases:
+1. Combine data from similar tables (e.g., monthly/yearly splits).
+2. Merge archived and current data.
+3. Combine employees, contractors, and vendors into one list.
+4. Create reports from multiple sources.
+
+Performance tips:
+- Use UNION ALL if duplicates don't matter (much faster).
+- Add WHERE clauses to filter before combining (reduces rows).
+- Index columns used in WHERE and ORDER BY clauses.
+
+Common mistakes to avoid:
+❌ Different number of columns in each SELECT
+❌ Incompatible data types
+❌ ORDER BY in individual SELECTs (only use at the end)
+❌ Using UNION when UNION ALL would work (unnecessary duplicate check)
+
+Quick comparison:
+
+UNION vs UNION ALL:
+- UNION: removes duplicates, slower
+- UNION ALL: keeps duplicates, faster
+
+UNION vs JOIN:
+- UNION: combines rows vertically (stacks results)
+- JOIN: combines columns horizontally (merges tables side by side)
+
+Example showing the difference:
+UNION: 
+Table A (2 rows) + Table B (3 rows) = 5 rows (if 1 duplicate removed)
+
+JOIN:
+Table A (2 rows) × Table B (3 rows) = depends on matching condition
+
+Small checklist to try:
+1. Create the sample tables above.
+2. Run UNION example and count rows (should be 5).
+3. Run UNION ALL example and count rows (should be 7).
+4. Try adding ORDER BY to sort results.
+5. Try combining 3+ tables using multiple UNION statements.
+
+End of notes.
