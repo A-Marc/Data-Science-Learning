@@ -1,0 +1,194 @@
+Joins in MySQL - Quick Notes
+
+Goal: Short, simple pointers about JOINs in MySQL with small example code and expected outputs.
+
+Common terms:
+- Table A, Table B: two tables we want to combine
+- ON: clause to define how rows match (usually column equality)
+
+Sample tables (use these for all examples):
+
+-- departments table
+CREATE TABLE departments (
+	id INT PRIMARY KEY,
+	dept_name VARCHAR(30)
+);
+
+INSERT INTO departments (id, dept_name) VALUES
+(1, 'HR'),
+(2, 'Sales'),
+(3, 'IT');
+
+-- employees table (note: one employee has NULL dept_id, one uses a non-existing id)
+CREATE TABLE employees (
+	id INT PRIMARY KEY,
+	name VARCHAR(30),
+	dept_id INT
+);
+
+INSERT INTO employees (id, name, dept_id) VALUES
+(1, 'Alice', 1),
+(2, 'Bob', 2),
+(3, 'Charlie', NULL),
+(4, 'David', 2),
+(5, 'Eve', 4); -- dept_id 4 does not exist in departments
+
+Tables (content):
+
+departments
+id | dept_name
+---+----------
+1  | HR
+2  | Sales
+3  | IT
+
+employees
+id | name    | dept_id
+---+---------+--------
+1  | Alice   | 1
+2  | Bob     | 2
+3  | Charlie | NULL
+4  | David   | 2
+5  | Eve     | 4
+
+1) INNER JOIN
+- What: returns rows where matching keys exist in both tables.
+- Syntax: SELECT ... FROM A INNER JOIN B ON A.col = B.col;
+
+Example:
+SELECT e.name, d.dept_name
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.id;
+
+Output (rows with matches only):
+name   | dept_name
+-------+----------
+Alice  | HR
+Bob    | Sales
+David  | Sales
+
+(Charlie and Eve excluded because Charlie has NULL, Eve's dept_id=4 has no match)
+
+2) LEFT JOIN (LEFT OUTER JOIN)
+- What: all rows from left table (employees) + matching rows from right table (departments). If no match, show NULLs.
+- Syntax: SELECT ... FROM A LEFT JOIN B ON A.col = B.col;
+
+Example:
+SELECT e.name, d.dept_name
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id;
+
+Output (all employees):
+name    | dept_name
+--------+----------
+Alice   | HR
+Bob     | Sales
+Charlie | NULL
+David   | Sales
+Eve     | NULL
+
+3) RIGHT JOIN (RIGHT OUTER JOIN)
+- What: all rows from right table (departments) + matching rows from left table (employees). If no match, left columns are NULL.
+- Syntax: SELECT ... FROM A RIGHT JOIN B ON A.col = B.col;
+
+Example:
+SELECT e.name, d.dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.dept_id = d.id;
+
+Output (all departments):
+name   | dept_name
+-------+----------
+Alice  | HR
+Bob    | Sales
+David  | Sales
+NULL   | IT
+
+Note: department IT has no employee -> name is NULL.
+
+4) FULL OUTER JOIN (MySQL workaround)
+- What: rows from both tables; include unmatched rows from both sides.
+- MySQL does NOT have FULL OUTER JOIN. Use UNION of LEFT and RIGHT joins.
+
+Example workaround:
+SELECT e.id, e.name, d.dept_name
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id
+UNION
+SELECT e.id, e.name, d.dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.dept_id = d.id;
+
+Output (rows from both sides, no duplicates):
+id | name    | dept_name
+---+---------+----------
+1  | Alice   | HR
+2  | Bob     | Sales
+3  | Charlie | NULL
+4  | David   | Sales
+5  | Eve     | NULL
+NULL| NULL   | IT
+
+5) CROSS JOIN
+- What: Cartesian product. Every row in A matched with every row in B.
+- Use when you need all combinations (rare).
+- Syntax: SELECT ... FROM A CROSS JOIN B; or SELECT ... FROM A, B;
+
+Example:
+SELECT e.name, d.dept_name
+FROM employees e
+CROSS JOIN departments d;
+
+Output: 5 employees * 3 departments = 15 rows (first few shown):
+Alice | HR
+Alice | Sales
+Alice | IT
+Bob   | HR
+... and so on (total 15 rows)
+
+6) SELF JOIN
+- What: join a table to itself. Useful for hierarchical data (e.g., manager-employee).
+- Syntax: SELECT a.col, b.col FROM table a JOIN table b ON a.other = b.id;
+
+Example (employees with manager_id):
+CREATE TABLE employees2 (
+	id INT PRIMARY KEY,
+	name VARCHAR(30),
+	manager_id INT
+);
+
+INSERT INTO employees2 (id, name, manager_id) VALUES
+(1, 'Alice', NULL),
+(2, 'Bob', 1),
+(3, 'Charlie', 2);
+
+Query:
+SELECT e.name AS employee, m.name AS manager
+FROM employees2 e
+LEFT JOIN employees2 m ON e.manager_id = m.id;
+
+Output:
+employee | manager
+---------+--------
+Alice    | NULL
+Bob      | Alice
+Charlie  | Bob
+
+7) NATURAL JOIN
+- What: join on columns with the same name in both tables automatically.
+- Not recommended: implicit matching can be unsafe. Prefer explicit ON.
+- Syntax: SELECT ... FROM A NATURAL JOIN B;
+
+Quick tips and common mistakes:
+- Always prefer explicit JOIN ... ON ... for clarity.
+- Watch NULLs: NULL does not equal any value, so JOINs using NULL keys won't match.
+- LEFT vs RIGHT: swap table order to get the other outer join effect.
+- FULL JOIN: use UNION workaround in MySQL.
+- Use indexes on join columns for better performance.
+
+Small checklist to try in your environment:
+1. Create the two sample tables above.
+2. Run each example SELECT to see the outputs shown here.
+3. Try changing/adding rows (NULLs, missing foreign keys) to observe behavior.
+
+End of notes.
