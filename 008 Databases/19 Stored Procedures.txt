@@ -1,0 +1,269 @@
+STORED PROCEDURES - QUICK NOTES
+================================
+
+WHAT IS A STORED PROCEDURE?
+---------------------------
+• A stored procedure is a prepared SQL code that you can save and reuse
+• Like a function in programming - write once, use many times
+• Stored in the database itself, not in your application code
+• Can accept input values (parameters) and return results
+
+
+WHY USE STORED PROCEDURES?
+--------------------------
+✓ Reusability: Write once, call anywhere
+✓ Performance: Pre-compiled and optimized by database
+✓ Security: Users can run procedures without direct table access
+✓ Maintainability: Update logic in one place, affects all applications
+✓ Reduced Network Traffic: Send one call instead of multiple queries
+✓ Business Logic: Keep database rules in the database
+
+
+BASIC SYNTAX
+------------
+Creating a procedure:
+
+    DELIMITER //
+    CREATE PROCEDURE procedure_name()
+    BEGIN
+        -- Your SQL statements here
+        SELECT * FROM table_name;
+    END //
+    DELIMITER ;
+
+Calling a procedure:
+
+    CALL procedure_name();
+
+
+PROCEDURES WITH PARAMETERS
+--------------------------
+• IN parameters: Pass values into the procedure (input only)
+• OUT parameters: Return values from the procedure (output only)
+• INOUT parameters: Both input and output
+
+Example with IN parameter:
+
+    DELIMITER //
+    CREATE PROCEDURE GetStudentByID(IN student_id INT)
+    BEGIN
+        SELECT * FROM students WHERE id = student_id;
+    END //
+    DELIMITER ;
+    
+    CALL GetStudentByID(5);
+
+
+Example with OUT parameter:
+
+    DELIMITER //
+    CREATE PROCEDURE GetTotalStudents(OUT total INT)
+    BEGIN
+        SELECT COUNT(*) INTO total FROM students;
+    END //
+    DELIMITER ;
+    
+    CALL GetTotalStudents(@count);
+    SELECT @count;
+
+
+PROCEDURES WITH MULTIPLE PARAMETERS
+-----------------------------------
+    DELIMITER //
+    CREATE PROCEDURE AddNewStudent(
+        IN student_name VARCHAR(100),
+        IN student_age INT,
+        IN student_grade VARCHAR(2)
+    )
+    BEGIN
+        INSERT INTO students (name, age, grade) 
+        VALUES (student_name, student_age, student_grade);
+    END //
+    DELIMITER ;
+    
+    CALL AddNewStudent('John Doe', 20, 'A');
+
+
+USING VARIABLES IN PROCEDURES
+-----------------------------
+    DELIMITER //
+    CREATE PROCEDURE CalculateDiscount(IN price DECIMAL(10,2))
+    BEGIN
+        DECLARE discount DECIMAL(10,2);
+        DECLARE final_price DECIMAL(10,2);
+        
+        SET discount = price * 0.10;
+        SET final_price = price - discount;
+        
+        SELECT price, discount, final_price;
+    END //
+    DELIMITER ;
+
+
+IF-ELSE IN STORED PROCEDURES
+----------------------------
+    DELIMITER //
+    CREATE PROCEDURE CheckGrade(IN marks INT)
+    BEGIN
+        IF marks >= 90 THEN
+            SELECT 'Grade A' AS result;
+        ELSEIF marks >= 75 THEN
+            SELECT 'Grade B' AS result;
+        ELSEIF marks >= 60 THEN
+            SELECT 'Grade C' AS result;
+        ELSE
+            SELECT 'Grade F' AS result;
+        END IF;
+    END //
+    DELIMITER ;
+
+
+LOOPS IN STORED PROCEDURES
+--------------------------
+WHILE loop example:
+
+    DELIMITER //
+    CREATE PROCEDURE PrintNumbers()
+    BEGIN
+        DECLARE counter INT DEFAULT 1;
+        
+        WHILE counter <= 5 DO
+            SELECT counter;
+            SET counter = counter + 1;
+        END WHILE;
+    END //
+    DELIMITER ;
+
+
+VIEWING STORED PROCEDURES
+-------------------------
+• Show all procedures:
+    SHOW PROCEDURE STATUS;
+
+• Show procedures in current database:
+    SHOW PROCEDURE STATUS WHERE db = 'database_name';
+
+• View procedure code:
+    SHOW CREATE PROCEDURE procedure_name;
+
+
+MODIFYING STORED PROCEDURES
+---------------------------
+• You cannot directly modify a stored procedure
+• You must DROP and recreate it:
+
+    DROP PROCEDURE IF EXISTS procedure_name;
+    
+    CREATE PROCEDURE procedure_name()
+    BEGIN
+        -- New code here
+    END;
+
+
+DELETING STORED PROCEDURES
+--------------------------
+    DROP PROCEDURE procedure_name;
+    
+    -- Safe deletion (no error if doesn't exist):
+    DROP PROCEDURE IF EXISTS procedure_name;
+
+
+ERROR HANDLING
+--------------
+Using DECLARE HANDLER:
+
+    DELIMITER //
+    CREATE PROCEDURE SafeInsert(IN name VARCHAR(100))
+    BEGIN
+        DECLARE EXIT HANDLER FOR SQLEXCEPTION
+        BEGIN
+            SELECT 'Error occurred' AS message;
+        END;
+        
+        INSERT INTO students (name) VALUES (name);
+        SELECT 'Success' AS message;
+    END //
+    DELIMITER ;
+
+
+REAL-WORLD EXAMPLES
+-------------------
+
+1. Get Employee Details:
+    CREATE PROCEDURE GetEmployeeInfo(IN emp_id INT)
+    BEGIN
+        SELECT name, salary, department 
+        FROM employees 
+        WHERE id = emp_id;
+    END;
+
+2. Update Salary:
+    CREATE PROCEDURE IncreaseSalary(IN emp_id INT, IN percentage DECIMAL(5,2))
+    BEGIN
+        UPDATE employees 
+        SET salary = salary + (salary * percentage / 100)
+        WHERE id = emp_id;
+    END;
+
+3. Delete Old Records:
+    CREATE PROCEDURE DeleteOldOrders(IN days INT)
+    BEGIN
+        DELETE FROM orders 
+        WHERE order_date < DATE_SUB(NOW(), INTERVAL days DAY);
+    END;
+
+
+BEST PRACTICES
+--------------
+✓ Use meaningful names (e.g., GetCustomerOrders, not proc1)
+✓ Add comments to explain complex logic
+✓ Handle errors properly with error handlers
+✓ Use parameters instead of hard-coding values
+✓ Test procedures thoroughly before production use
+✓ Keep procedures simple and focused on one task
+✓ Document what parameters are needed
+
+
+ADVANTAGES VS DISADVANTAGES
+---------------------------
+Advantages:
+• Faster execution (pre-compiled)
+• Better security control
+• Code reusability
+• Reduced network traffic
+• Centralized business logic
+
+Disadvantages:
+• Can be harder to debug
+• Increases database server load
+• Less portable across different databases
+• Version control can be tricky
+
+
+QUICK TIPS
+----------
+• Always use DELIMITER when creating procedures in MySQL
+• Test with sample data before using in production
+• Use descriptive parameter names
+• Check if procedure exists before dropping
+• Keep procedures small and manageable
+• Use transactions when modifying data
+
+
+COMMON MISTAKES TO AVOID
+------------------------
+❌ Forgetting to change delimiter back after creation
+❌ Not checking for NULL values in parameters
+❌ Creating overly complex procedures
+❌ Not handling errors properly
+❌ Using SELECT * instead of specific columns
+❌ Forgetting to grant EXECUTE permissions to users
+
+
+REMEMBER
+--------
+• Stored procedures are like recipes stored in your database
+• They make your work easier by automating repetitive tasks
+• Perfect for complex operations that involve multiple steps
+• Can significantly improve application performance
+• Essential tool for database developers and administrators
