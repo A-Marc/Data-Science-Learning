@@ -1,0 +1,65 @@
+Probability Practice Set 1
+Questions and Solutions
+
+1. You roll a fair six-sided die. What is the probability of getting an even number?
+
+Answer: 1/2 or 0.5 or 50%
+
+Explanation:
+Sample space = {1, 2, 3, 4, 5, 6} (total 6 outcomes)
+Even numbers = {2, 4, 6} (3 favorable outcomes)
+Probability = Number of favorable outcomes / Total outcomes = 3/6 = 1/2
+
+
+2. Two coins are tossed. Find the sample space associated with this random experiment.
+
+Answer: {HH, HT, TH, TT}
+
+Explanation:
+When tossing two coins, each coin can show either Heads (H) or Tails (T).
+- First coin H, Second coin H → HH
+- First coin H, Second coin T → HT
+- First coin T, Second coin H → TH
+- First coin T, Second coin T → TT
+Total 4 possible outcomes in the sample space.
+
+
+3. Two six-sided dice are rolled. What is the probability that the sum is 7?
+
+Answer: 1/6 or approximately 0.167 or 16.67%
+
+Explanation:
+Total possible outcomes = 6 × 6 = 36
+Combinations that sum to 7:
+(1,6), (2,5), (3,4), (4,3), (5,2), (6,1) = 6 favorable outcomes
+Probability = 6/36 = 1/6
+
+
+4. A bag contains 3 red, 2 blue, and 5 green balls. What is the probability of randomly selecting a red ball?
+
+Answer: 3/10 or 0.3 or 30%
+
+Explanation:
+Total balls = 3 + 2 + 5 = 10
+Red balls = 3
+Probability = Number of red balls / Total balls = 3/10
+
+
+5. A card is drawn at random from a deck. Find the probability of:
+
+a) Getting a heart
+Answer: 1/4 or 0.25 or 25%
+
+Explanation:
+Standard deck has 52 cards with 4 suits (hearts, diamonds, clubs, spades).
+Hearts = 13 cards
+Probability = 13/52 = 1/4
+
+b) Getting a face card
+Answer: 3/13 or approximately 0.231 or 23.1%
+
+Explanation:
+Face cards are Jack, Queen, and King.
+Each suit has 3 face cards, and there are 4 suits.
+Total face cards = 3 × 4 = 12
+Probability = 12/52 = 3/13
