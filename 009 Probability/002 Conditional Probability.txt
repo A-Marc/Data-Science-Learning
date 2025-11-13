@@ -1,0 +1,22 @@
+
+Conditional Probability — Summary
+
+- Definition: **P(A|B)** is the probability that event A occurs given that event B has occurred.
+- Formula: `P(A|B) = P(A and B) / P(B)` , valid when `P(B) > 0`.
+
+- Law of Total Probability: If `B1, B2, ..., Bn` partition the sample space (mutually exclusive and collectively exhaustive) then
+	`P(A) = sum_{i=1..n} P(A|Bi) * P(Bi)`.
+
+- Conditions to use the law: each `Bi` has `P(Bi) > 0`, the `Bi` are mutually exclusive, and together they cover the whole sample space.
+
+- Quick examples:
+	- Balls: a box has 5 red, 3 blue, 2 green. Given the picked ball is not green, probability it's red: `P(Red | Not Green) = 5 / (5+3) = 5/8`.
+	- Students & football: `P(Boy)=0.6`, `P(Girl)=0.4`, `P(F|Boy)=0.3`, `P(F|Girl)=0.1`.
+		`P(F)=0.3*0.6 + 0.1*0.4 = 0.22`. Then `P(Boy|F) = (0.3*0.6) / 0.22 ≈ 0.818 (81.8%)`.
+
+- Common mistakes to avoid:
+	- Confusing `P(A|B)` with `P(B|A)`.
+	- Forgetting to divide by `P(B)` (or conditioning on an event with `P(B)=0`).
+
+Short and practical: use conditional probability to update event chances when new information arrives; use the law of total probability to compute an overall probability by conditioning on a convenient partition.
+
