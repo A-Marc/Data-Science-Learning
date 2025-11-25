@@ -1,0 +1,10 @@
+Unsupervised Learning
+
+Unsupervised learning is a type of machine learning where the algorithm learns patterns from unlabeled data without any predefined correct answers or target outputs. The model explores the data structure on its own to find hidden patterns, groupings, or relationships. It's called "unsupervised" because there's no teacher providing correct answers—the algorithm discovers insights independently.
+
+Examples:
+• Customer Segmentation — Group customers into clusters based on purchasing behavior without predefined categories
+• Anomaly Detection — Identify unusual patterns in network traffic or credit card transactions
+• Market Basket Analysis — Discover which products are frequently bought together in retail
+• Document Clustering — Organize news articles or research papers into topic groups automatically
+• Dimensionality Reduction — Compress high-dimensional data (e.g., images) while preserving important features using PCA or t-SNE
