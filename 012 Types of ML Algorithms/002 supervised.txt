@@ -1,0 +1,10 @@
+Supervised Learning
+
+Supervised learning is a type of machine learning where the algorithm learns from labeled training data, where each input has a corresponding correct output. The model learns to map inputs to outputs by finding patterns in the labeled examples, and then uses this learned mapping to predict outputs for new, unseen data. It's called "supervised" because the training process is guided by the correct answers (labels).
+
+Examples:
+• Email Spam Detection — Classify emails as spam or not spam based on labeled training emails
+• House Price Prediction — Predict property prices based on features like size, location, bedrooms (trained on historical sales data)
+• Image Classification — Identify objects in images (e.g., cat vs. dog) using labeled image datasets
+• Credit Score Assessment — Predict loan default risk based on past customer data with known outcomes
+• Medical Diagnosis — Classify diseases from symptoms and test results using historical patient records
