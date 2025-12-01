@@ -1,0 +1,21 @@
+Measuring Errors (RMSE & MAE)
+
+In machine learning, measuring the performance of regression models is crucial. Two commonly used metrics for this purpose are Root Mean Squared Error (RMSE) and Mean Absolute Error (MAE).
+
+1. Mean Absolute Error (MAE):
+MAE is the average of the absolute differences between the predicted values and the actual values. It gives an idea of how wrong the predictions were.
+Formula: 
+MAE = (1/n) * Σ |yi - ŷi|
+where:
+- n is the number of data points
+- yi is the actual value
+- ŷi is the predicted value
+
+2. Root Mean Squared Error (RMSE):
+RMSE is the square root of the average of the squared differences between the predicted values and the actual values. It gives more weight to larger errors.
+Formula:
+RMSE = sqrt((1/n) * Σ (yi - ŷi)²)
+where:
+- n is the number of data points
+- yi is the actual value
+- ŷi is the predicted value
