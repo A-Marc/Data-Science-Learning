@@ -1,13 +1,54 @@
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# Python cache
+# ================================
+# Python
+# ================================
+# Byte-compiled / optimized files
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
 *.pyd
 
-# Virtual environment folders
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ================================
+# Jupyter Notebook
+# ================================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*.nbconvert.ipynb
+.jupyter/
+
+# Virtual documents (Jupyter Lab/VS Code)
+.virtual_documents/
+*/.virtual_documents/*
+.virtual_docs/
+
+# ================================
+# Virtual Environments
+# ================================
 .env
 .venv
 env/
@@ -15,24 +56,66 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+pyvenv.cfg
 
-# Anaconda project folder
+# Anaconda
 anaconda_projects/
+.conda/
 
-# Jupyter Notebook config/runtime
-.jupyter/
-*.nbconvert.ipynb
-*.nbconvert/
+# ================================
+# IDEs and Editors
+# ================================
+# VS Code
+.vscode/
+*.code-workspace
 
-# Data Science common outputs
-*.csv
-*.tsv
-*.log
-*.out
-*.sqlite
-*.db
+# PyCharm
+.idea/
+*.iml
 
-# Large data files (optional, if you don’t want them in repo)
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ================================
+# Operating System
+# ================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ================================
+# Data Science Specific
+# ================================
+# Data files (uncomment if needed)
+# *.csv
+# *.tsv
+# *.xlsx
+# *.xls
+# *.json
+# *.xml
+
+# Large data files
 *.h5
 *.hdf5
 *.parquet
@@ -40,92 +123,114 @@ anaconda_projects/
 *.pkl
 *.pickle
 
-# OS specific
-.DS_Store
-Thumbs.db
+# Database files
+*.sqlite
+*.sqlite3
+*.db
 
-# VSCode/IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Model files
+*.h5
+*.model
+*.pkl
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.pb
+*.bin
+*.safetensors
 
-# Misc
-*.bak
-*.tmp
-./anaconda_projects/
-
-# -----------------------------
-# Additional Data-Science ignores
-# -----------------------------
-# Dataset folders (local copies, exports, examples)
-/data/
-/datasets/
-/data_raw/
-/data_processed/
-/**/data/
-
-# Model artifacts and checkpoints
-/models/
-/model_weights/
-/checkpoints/
-/*.ckpt
-/*.pt
-/*.pth
-
-# TensorFlow and PyTorch temporary files
-/tf_model_dir/
+# ================================
+# ML Frameworks
+# ================================
+# TensorFlow
+*.tfevents.*
 /tensorboard/
-/events.out.tfevents.*
+/tf_model_dir/
 
-# MLflow and experiment tracking
+# PyTorch
+*.pth.tar
+
+# MLflow
 .mlflow/
 mlruns/
 
-# Saved environments and package managers
-environment.yml
-requirements.txt
-Pipfile
-Pipfile.lock
-venv/
+# Weights & Biases
+wandb/
 
-# Secret and credential files
-.env.local
-.env.*
-secrets.json
-credentials.json
-credentials/
+# ================================
+# Project Specific
+# ================================
+# Scraped HTML files
+htmls/
+**/htmls/
 
-# Build and distribution
-dist/
-build/
-*.egg-info/
-
-# Lock files and caches
-*.lock
-__pypackages__/
-
-# Notebook checkpoints and outputs (keep source, ignore outputs)
-*.nbconvert.ipynb
-output/*
-
-# Logs, reports, and temporary analysis outputs
-reports/
+# Logs and reports
+*.log
+*.out
 logs/
+reports/
 **/logs/
 
-# Large binaries and intermediate files
-*.h5
-*.bin
-*.model
-*.onnx
+# Temporary files
+*.tmp
+*.bak
+*.cache
+.cache/
+
+# Output directories
+output/
+outputs/
+results/
 
 # Archive files
 *.zip
+*.tar
 *.tar.gz
 *.7z
+*.rar
 
-# Ignore html dump folders used for scraping practice
-htmls/
+# ================================
+# Credentials & Secrets
+# ================================
+.env.local
+.env.*.local
+secrets.json
+credentials.json
+credentials/
+*.key
+*.pem
+config.ini
 
-# End of additional ignores
+# ================================
+# Package Managers
+# ================================
+# Keep requirements files for reproducibility
+# environment.yml
+# requirements.txt
+Pipfile.lock
+poetry.lock
+package-lock.json
+yarn.lock
+
+# ================================
+# Testing
+# ================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ================================
+# Documentation
+# ================================
+docs/_build/
+site/
+
+# ================================
+# Misc
+# ================================
+*.orig
+.DS_Store?
