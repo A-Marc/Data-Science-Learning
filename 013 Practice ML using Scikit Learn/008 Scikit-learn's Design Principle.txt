@@ -1,0 +1,215 @@
+SCIKIT-LEARN'S DESIGN PRINCIPLES
+================================================================================
+
+OVERVIEW
+--------
+• Simple and consistent API across all tools
+• Standard interface for all objects
+• Makes learning and usage easier
+
+================================================================================
+1. CONSISTENCY
+----------------
+• All objects follow a standard interface
+• Uniform methods across different algorithms
+• Easy to switch between models
+
+================================================================================
+2. ESTIMATORS
+-------------
+Definition:
+• Any object that learns from data
+
+Key Method: .fit()
+• Trains the estimator on data
+• Supervised: fit(X, y) - features and labels
+• Unsupervised: fit(X) - features only
+
+Hyperparameters:
+• Set during object creation
+• Not learned from data
+
+Example:
+```python
+from sklearn.impute import SimpleImputer
+
+imputer = SimpleImputer(strategy="median")
+imputer.fit(data)
+```
+
+================================================================================
+3. TRANSFORMERS
+---------------
+Definition:
+• Estimators that can transform data
+
+Key Methods:
+• .transform() - apply transformation after fitting
+• .fit_transform() - fit and transform in one step
+
+Example:
+```python
+# Method 1: Separate steps
+imputer = SimpleImputer(strategy="median")
+imputer.fit(data)
+X_transformed = imputer.transform(data)
+
+# Method 2: Combined
+X_transformed = imputer.fit_transform(data)
+```
+
+================================================================================
+4. PREDICTORS
+-------------
+Definition:
+• Models that make predictions
+
+Key Methods:
+• .predict() - make predictions on new data
+• .score() - evaluate model performance (accuracy/R²)
+
+Example:
+```python
+from sklearn.linear_model import LinearRegression
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Make predictions
+predictions = model.predict(X_test)
+
+# Evaluate performance
+score = model.score(X_test, y_test)
+```
+
+================================================================================
+5. INSPECTION
+-------------
+Access Parameters:
+• Hyperparameters: model.param_name (no underscore)
+• Learned parameters: model.param_name_ (with underscore)
+
+Examples:
+```python
+# Hyperparameter
+imputer.strategy  # "median"
+
+# Learned parameter
+imputer.statistics_  # array of median values
+model.coef_  # coefficients learned by model
+```
+
+================================================================================
+6. NO EXTRA CLASSES
+-------------------
+• Inputs: NumPy arrays or Pandas DataFrames
+• Outputs: NumPy arrays or simple Python types
+• No custom data structures required
+
+================================================================================
+7. COMPOSITION (PIPELINES)
+--------------------------
+Definition:
+• Chain multiple steps into a single workflow
+• Combine transformers + final predictor
+
+Benefits:
+• Cleaner code
+• Easier to manage multiple steps
+• Apply all transformations consistently
+
+Example:
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+
+pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler()),
+    ("model", LinearRegression())
+])
+
+pipeline.fit(X_train, y_train)
+predictions = pipeline.predict(X_test)
+```
+
+================================================================================
+8. SENSIBLE DEFAULTS
+--------------------
+• Most tools work well with default settings
+• Can get started quickly without tuning
+• Defaults based on best practices
+
+Example:
+```python
+# Works well without specifying parameters
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+```
+
+================================================================================
+IMPORTANT NOTE: DATAFRAME HANDLING
+-----------------------------------
+Issue:
+• Transformer output is NumPy array (not DataFrame)
+• Even if input is DataFrame
+
+Solution:
+```python
+# Convert back to DataFrame
+X = imputer.transform(housing_num)
+housing_tr = pd.DataFrame(
+    X, 
+    columns=housing_num.columns, 
+    index=housing_num.index
+)
+```
+
+================================================================================
+QUICK REFERENCE CHART
+----------------------
+
+Component    | Methods              | Purpose
+-------------|----------------------|---------------------------
+Estimator    | .fit()              | Learn from data
+Transformer  | .transform()        | Apply transformation
+             | .fit_transform()    | Fit + transform
+Predictor    | .predict()          | Make predictions
+             | .score()            | Evaluate performance
+Pipeline     | All of above        | Chain multiple steps
+
+Parameters:
+• Hyperparameters: No underscore (e.g., strategy)
+• Learned parameters: Underscore suffix (e.g., statistics_)
+
+================================================================================
+WORKFLOW EXAMPLE
+----------------
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+
+# 1. Create pipeline
+pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler()),
+    ("model", LinearRegression())
+])
+
+# 2. Train
+pipeline.fit(X_train, y_train)
+
+# 3. Predict
+predictions = pipeline.predict(X_test)
+
+# 4. Evaluate
+score = pipeline.score(X_test, y_test)
+
+# 5. Inspect learned parameters
+print(pipeline.named_steps['model'].coef_)
+```
+
+================================================================================
