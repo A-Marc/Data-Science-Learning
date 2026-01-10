@@ -107,13 +107,15 @@ $RECYCLE.BIN/
 # ================================
 # Data Science Specific
 # ================================
-# Data files (uncomment if needed)
-# *.csv
-# *.tsv
-# *.xlsx
-# *.xls
-# *.json
-# *.xml
+# Raw and processed data files (uncomment lines as needed)
+*.csv
+*.tsv
+*.xlsx
+*.xls
+# *.json  # Keep json for configs but ignore large data files
+*.xml
+*.dat
+*.data
 
 # Large data files
 *.h5
@@ -122,6 +124,15 @@ $RECYCLE.BIN/
 *.feather
 *.pkl
 *.pickle
+*.npy
+*.npz
+*.mat
+
+# Large JSON data files (specific to your project)
+massive_data.json
+**/massive_data.json
+codebook_data.json
+**/codebook_data.json
 
 # Database files
 *.sqlite
@@ -139,6 +150,15 @@ $RECYCLE.BIN/
 *.pb
 *.bin
 *.safetensors
+*.joblib
+*.sav
+
+# Trained model directories
+models/
+saved_models/
+checkpoints/
+**/models/
+**/saved_models/
 
 # ================================
 # ML Frameworks
@@ -172,6 +192,17 @@ logs/
 reports/
 **/logs/
 
+# Plots and figures (generated outputs)
+figures/
+plots/
+**/figures/
+**/plots/
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+
 # Temporary files
 *.tmp
 *.bak
@@ -182,6 +213,18 @@ reports/
 output/
 outputs/
 results/
+experiments/
+artifacts/
+**/output/
+**/outputs/
+**/results/
+
+# Processed data (keep raw data in version control if small)
+processed/
+preprocessed/
+cleaned/
+**/processed/
+**/preprocessed/
 
 # Archive files
 *.zip
@@ -234,3 +277,36 @@ site/
 # ================================
 *.orig
 .DS_Store?
+
+# ================================
+# Notebooks (keep .ipynb but ignore outputs)
+# ================================
+# Only ignore specific large notebooks if needed
+# *-checkpoint.ipynb
+
+# ================================
+# Project Build Artifacts
+# ================================
+*.whl
+
+# ================================  
+# IDE-specific
+# ================================
+.spyderproject
+.spyproject
+.ropeproject
+*.sage.py
+
+# ================================
+# Keep Important Files (whitelist)
+# ================================
+# Force include these even if parent dir is ignored
+!requirements.txt
+!environment.yml
+!setup.py
+!README.md
+!LICENSE
+!.gitignore
+!Makefile
+!Dockerfile
+!docker-compose.yml

@@ -1,0 +1,28 @@
+Measuring Errors
+In machine learning, measuring errors is crucial for evaluating the performance of predictive models. Here are some common metrics used to measure errors in regression tasks, such as predicting house prices:
+1. Mean Absolute Error (MAE):
+   - Definition: The average of the absolute differences between predicted and actual values.
+   - Formula: 
+     MAE = (1/n) * Σ |yi - ŷi|
+   - Interpretation: MAE gives an idea of how much, on average, the predictions deviate from the actual values.
+
+2. Mean Squared Error (MSE):
+   - Definition: The average of the squared differences between predicted and actual values.
+    - Formula: 
+      MSE = (1/n) * Σ (yi - ŷi)²
+    - Interpretation: MSE penalizes larger errors more than MAE, making it sensitive to outliers.
+
+3. Root Mean Squared Error (RMSE):
+   - Definition: The square root of the mean squared error.
+    - Formula: 
+      RMSE = √MSE
+    - Interpretation: RMSE provides an error metric in the same units as the target variable, making it easier to interpret.
+
+4. R-squared (R²):
+   - Definition: A statistical measure that represents the proportion of variance for a dependent variable that's explained
+        by an independent variable or variables in a regression model.
+    - Formula: 
+      R² = 1 - (Σ (yi - ŷi)² / Σ (yi - ȳ)²)
+    - Interpretation: R² values range from 0 to 1, where a value closer to 1 indicates a better fit of the model to the data.
+
+When evaluating a regression model, it's important to consider multiple error metrics to get a comprehensive understanding of its performance. Each metric provides different insights, and the choice of metric may depend on the specific context and requirements of the problem at hand.
