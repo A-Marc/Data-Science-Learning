@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📊 Data Science Learning Journey
+# 📊 Data Science Learning Journey from Marc
 
 ### _Master Data Science from Fundamentals to Machine Learning_
 
